@@ -1,7 +1,7 @@
 #include "allegro.h"
 //#include "avlib.h"
 
-void Allegro::_undefined_(Allegro* master, void* context, unsigned char event, int x, int y){
+void Allegro::_undefined_(Allegro* master, void* context, uint16_t event, int x, int y){
 	// Do nothing
 }
 
@@ -9,7 +9,7 @@ void Allegro::_undefined_(Allegro* master, float FPS){
 	
 }
 
-void Allegro::_undefined_(Allegro* master, void* context, unsigned char event, uint8_t keycode){
+void Allegro::_undefined_(Allegro* master, void* context, uint16_t event, uint8_t keycode){
 	
 }
 
@@ -37,6 +37,7 @@ Allegro::Allegro()
 	key_up_func_ptr = &Allegro::_undefined_;
 	
 	keys = std::vector<bool>(255, false);
+	mouseBtns = std::vector<bool>(4, false);
 	
 	context = NULL;
 
@@ -58,14 +59,14 @@ Allegro::~Allegro()
     al_destroy_display(display);
 }
 
-void Allegro::_exec_mouse_clicked_function(){
+void Allegro::_exec_mouse_clicked_function(uint16_t ev){
 	if(mouse.getBtn() == 1){
-		mouse_clicked_func_ptr(this, context, MOUSE_L_CLICKED, mouse.getX(), mouse.getY());
+		mouse_clicked_func_ptr(this, context, MOUSE_L_CLICKED | ev, mouse.getX(), mouse.getY());
 	} else if(mouse.getBtn() == 2)
-		mouse_clicked_func_ptr(this, context, MOUSE_R_CLICKED, mouse.getX(), mouse.getY());
+		mouse_clicked_func_ptr(this, context, MOUSE_R_CLICKED | ev, mouse.getX(), mouse.getY());
 }
 
-void Allegro::_exec_mouse_moved_function(uchar ev){
+void Allegro::_exec_mouse_moved_function(uint16_t ev){
 	if(ev == MOUSE_MOVED)
 		if(!cursorSticked)
 			mouse_moved_func_ptr(this, context, MOUSE_MOVED, mouse.getX(), mouse.getY());
@@ -90,27 +91,28 @@ void Allegro::_exec_key_up_function(uint8_t keycode){
 	key_up_func_ptr(this, context, KEY_UP, keycode);
 }
 
-void Allegro::bindMouseClick(void (*fptr)(Allegro*, void*, unsigned char, int, int)){
+void Allegro::bindMouseClick(void (*fptr)(Allegro*, void*, uint16_t, int, int)){
 	mouse_clicked_func_ptr = fptr;
 }
 
-void Allegro::bindMouseMove(void (*fptr)(Allegro*, void*, unsigned char, int, int)){
+void Allegro::bindMouseMove(void (*fptr)(Allegro*, void*, uint16_t, int, int)){
 	mouse_moved_func_ptr = fptr;
 }
 
-void Allegro::bindKeyDown(void (*fptr)(Allegro*, void*, unsigned char, uint8_t)){
+void Allegro::bindKeyDown(void (*fptr)(Allegro*, void*, uint16_t, uint8_t)){
 	key_down_func_ptr = fptr;
 }
 
-void Allegro::bindKeyUp(void (*fptr)(Allegro*, void*, unsigned char, uint8_t)){
+void Allegro::bindKeyUp(void (*fptr)(Allegro*, void*, uint16_t, uint8_t)){
 	key_up_func_ptr = fptr;
 }
 
 bool Allegro::isKeyDown(int keycode){
-	if(keys[keycode])
-		return true;
-	else
-		return false;
+	return (keys[keycode]);
+}
+
+bool Allegro::isMouseBtnDown(int button){
+	return mouseBtns[button];
 }
 
 void Allegro::setRedrawFunction(void (*fptr)(Allegro*, float)){
@@ -166,6 +168,12 @@ void Allegro::setStickCursorToCenter(bool stick){
 		al_inhibit_screensaver(false);
 		al_ungrab_mouse();
 	}
+}
+
+void Allegro::quit(){
+	ALLEGRO_EVENT ev;
+	ev.type = ALLEGRO_EVENT_DISPLAY_CLOSE;
+	al_emit_user_event(&user_generated, &ev, NULL);
 }
 
 // LIGNE
@@ -228,6 +236,14 @@ void Allegro::draw_text(int x, int y, const char* text, ALLEGRO_COLOR color){
 	al_draw_text(default_font, color, x, y, ALLEGRO_ALIGN_CENTRE, text);
 }
 
+int Allegro::getTextWidth(std::string text, ALLEGRO_FONT* font){
+	return al_get_text_width(font, text.c_str());
+}
+
+int Allegro::getTextWidth(const char* text){
+	return al_get_text_width(default_font, text);
+}
+
 
 struct ALLEGRO_COLOR Allegro::rgb(int r, int g, int b){
 	return al_map_rgb(r, g, b);
@@ -241,12 +257,39 @@ void Allegro::resumeRedraw(){
 	redraw_paused = false;
 }
 
+int Allegro::showDialogMessage(char const* title, char const* heading, char const* text, char const* buttons, int flags = ALLEGRO_MESSAGEBOX_YES_NO){
+	return al_show_native_message_box(display, title, heading, text, buttons, flags);
+}
+
+const char* Allegro::askFile(char const* initial_path, char const* title, char const* patterns, int mode = 0){
+	ALLEGRO_FILECHOOSER* filechooser = al_create_native_file_dialog(initial_path, title, patterns, mode);
+	if(al_show_native_file_dialog(display, filechooser)){
+		return al_get_native_file_dialog_path(filechooser, 0);
+	} else {
+		return "";
+	}
+	
+}
+
+bool Allegro::screenshot(const char* filename, int x, int y, int x2, int y2){
+	if(x2 < 0 || y2 < 0){
+		return al_save_bitmap(filename, display_bitmap);
+	} else {
+		ALLEGRO_BITMAP* bmp = al_create_sub_bitmap(display_bitmap, x, y, x2-x, y2-y);
+		return al_save_bitmap(filename, bmp);
+	}
+}
+
 int Allegro::init()
 {
     if (!al_init())
     {
         return -1;
     }
+	
+	#ifdef __ENABLE_GUI__
+	gui_ptr = (void*)(new GUI());
+	#endif
 
     return 0;
 }
@@ -300,6 +343,8 @@ int Allegro::createWindow(float FPS, int width, int height)
         al_destroy_display(display);
         return -1;
     }
+	al_init_user_event_source(&user_generated);
+	al_register_event_source(event_queue, &user_generated);
 
     al_install_keyboard();
 	al_install_mouse();
@@ -308,19 +353,32 @@ int Allegro::createWindow(float FPS, int width, int height)
 	al_init_font_addon();
 	al_init_ttf_addon();
 	
+	
 	//default_font = al_load_ttf_font("arial.ttf", 25, 0);
 	
+
+#if (defined (LINUX) || defined (__linux__))
 	/* load font from memory */
-	
 	extern uint8_t arial_data[]	asm("_binary_allegro_arial_ttf_start");
 	extern uint8_t arial_data_size[]	asm("_binary_allegro_arial_ttf_size");
-	
+
 	size_t arial_size = (size_t)((void *)arial_data_size);
-	
+
 	arial_file = al_open_memfile(arial_data, (int64_t)arial_size, "r");
 	default_font = al_load_ttf_font_f(arial_file, NULL, 12, NULL);
-	
+
 	/* yep, the font file is embeded in the executable at link time :D */
+#endif
+#if (defined (_WIN32) || defined (_WIN64))
+	/*uint8_t* arial_data;
+	uint8_t* arial_data_size;
+	__asm mov _binary_allegro_arial_ttf_start, [ebx]arial_data
+	__asm mov _binary_allegro_arial_ttf_size, [ebx]arial_data_size*/
+
+	default_font = al_load_ttf_font("arial.ttf", 25, 0);
+
+#endif
+	
 	
 	if(!default_font){
 		std::cerr << "Warning ! Could not load default font !" << std::endl;
@@ -357,9 +415,34 @@ void Allegro::gameLoop()
 			al_acknowledge_resize(display);
 			//WIDTH = getDisplayWidth();
 			//HEIGHT = getDisplayHeight();
-		} else if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+		}else if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN){
+			mouseBtns[ev.mouse.button] = true;
 			mouse.setBtn(ev.mouse.button);
-			_exec_mouse_clicked_function();
+			
+			#ifdef __ENABLE_GUI__
+			int btnEv = 0;
+			if(mouse.getBtn() == 1)
+				btnEv = MOUSE_L_CLICKED;
+			else
+				btnEv = MOUSE_R_CLICKED;
+			getGUI()->checkBtnClick(this, btnEv | MOUSE_DOWN, mouse.getX(), mouse.getY());
+			#endif
+			
+			_exec_mouse_clicked_function(MOUSE_DOWN);
+		}else if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+			mouseBtns[ev.mouse.button] = false;
+			mouse.setBtn(ev.mouse.button);
+			
+			#ifdef __ENABLE_GUI__
+			int btnEv = 0;
+			if(mouse.getBtn() == 1)
+				btnEv = MOUSE_L_CLICKED;
+			else
+				btnEv = MOUSE_R_CLICKED;
+			getGUI()->checkBtnClick(this, btnEv | MOUSE_UP, mouse.getX(), mouse.getY());
+			#endif
+			
+			_exec_mouse_clicked_function(MOUSE_UP);
 		}
 		else if(ev.type == ALLEGRO_EVENT_MOUSE_AXES || ev.type == ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY) { 
 			al_get_mouse_state(mouse.getStatePtr());
@@ -370,6 +453,11 @@ void Allegro::gameLoop()
 				_exec_mouse_moved_function(MOUSE_WHEELED);
 			}
 			_exec_mouse_moved_function(MOUSE_MOVED);
+			
+			#ifdef __ENABLE_GUI__
+			getGUI()->btnHovering(this, MOUSE_MOVED, mouse.getX(), mouse.getY());
+			#endif
+			
 			if(cursorSticked)
 				al_set_mouse_xy(display, al_get_display_height(display)/2, al_get_display_width(display)/2);
 			
@@ -402,6 +490,10 @@ void Allegro::gameLoop()
             redraw = false;
 			
 			redraw_func_ptr(this, m_FPS);
+			
+			#ifdef __ENABLE_GUI__
+			getGUI()->drawAllBtns();
+			#endif
 
             al_flip_display();
         }
