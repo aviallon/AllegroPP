@@ -294,6 +294,10 @@ struct ALLEGRO_COLOR Allegro::rgb(int r, int g, int b){
 	return al_map_rgb(r, g, b);
 }
 
+struct ALLEGRO_COLOR Allegro::rgba(int r, int g, int b, int a){
+	return al_map_rgba(r, g, b, a);
+}
+
 void Allegro::stopRedraw(){
 	redraw_paused = true;
 }
@@ -541,6 +545,8 @@ void Allegro::gameLoop()
 			#ifdef __ENABLE_GUI__
 			
 			getGUI()->drawAllBtns();
+			
+			getGUI()->drawLastMessage();
 			
 			/*ancien_emplacement = al_create_sub_bitmap(display_bitmap, mouse.getX(), mouse.getY(), mouse.getX()+32, mouse.getY()+32);
 			if(ancien_emplacement != 0 && old_x != -1){

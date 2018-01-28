@@ -169,6 +169,20 @@ public:
 	Image* cursor;
 };
 
+class Message{
+public:
+	
+	Message(std::string message, float duration, float currentTime){
+		this->message = message;
+		this->duration = duration;
+		this->t0 = currentTime;
+	}
+	
+	std::string message;
+	float duration;
+	float t0 = 0;
+};
+
 class GUI{
 public:
 	GUI(Allegro* allegro) {
@@ -239,10 +253,38 @@ public:
 		}
 	}
 	
+	void drawLastMessage(){
+		if (messages.size() == 0)
+			return;
+		
+		Message lastMessage = messages[messages.size() - 1];
+		
+		float duree = MAX((allegro->getTime() - lastMessage.t0), 0);
+		if(duree >= lastMessage.duration){
+			messages.pop_back();
+			return;
+		}
+	
+		int alpha = 0;
+		if(lastMessage.duration - duree <= 1000){
+			alpha = -255*MAX((lastMessage.duration - duree), 0)/1000;
+		}
+		
+		allegro->draw_text(allegro->getDisplayWidth()/2, allegro->getDisplayHeight()-20, lastMessage.message, allegro->rgba(255-alpha, 255-alpha, 255-alpha, 0));
+		if(duree >= lastMessage.duration){
+			messages.pop_back();
+		}
+	}
+	
+	void displayMessage(std::string message, float duration){
+		messages.push_back(Message(message, duration, allegro->getTime()));
+	}
+	
 	Allegro* allegro;
 
 	int cursor = -1;
 	std::vector<Cursor> cursors;
 	std::vector<Image> images;
 	std::vector<Button> buttons;
+	std::vector<Message> messages;
 };

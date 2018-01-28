@@ -16,6 +16,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+
 #define MAX(a, b) (((a > b))?(a):(b))
 #define MIN(a, b) (((a < b))?(a):(b))
 
@@ -109,6 +110,7 @@ public:
 	static const uint16_t MOUSE_MOVED_DELTA = 1<<6;
 	
 	struct ALLEGRO_COLOR rgb(int r, int g, int b);
+	struct ALLEGRO_COLOR rgba(int r, int g, int b, int a);
 	
 	/* Les fonctions pour dessiner ! Enfin ! */
 	
