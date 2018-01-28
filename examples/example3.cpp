@@ -170,6 +170,8 @@ void redraw(Allegro* allegro, float FPS) {
 	allegro->draw_text(allegro->getDisplayWidth()-paintSize-5-allegro->getTextWidth(ss.str(), allegro->getDefaultFont()), 3, ss.str(), allegro->rgb(0, 0, 0));
 	Tile demo(allegro->getDisplayWidth()-paintSize-5, 3, tileColor, paintSize, shape);
 	demo.drawTile(allegro);
+	
+	allegro->getGUI()->drawAllImages();
 }
 
 void click(Allegro* allegro, void* cont, uint16_t ev, int x, int y) {
@@ -342,7 +344,8 @@ int main(int argc, const char** args) {
 	allegro->getGUI()->newBtn(allegro, "Bleu", 70+20, 3, 40, 80, &changeColorBtn);
 	allegro->getGUI()->newBtn(allegro, "Carré", 70+20+80+20, 3, 40, 60, &changeShape);
 	savebtn = allegro->getGUI()->newBtn(allegro, "Sauvegarder", 70+20+80+20+60+20, 3, 40, 80, &saveTheWorld);
-	cout << savebtn->id << endl;
+	//cout << savebtn->id << endl;
+	//allegro->getGUI()->newImage(allegro, "./linux.png", 50, 50, 0, 0);
 	
 	if(argc > 1){
 		loadTheWorld(world, args[argc-1]);
