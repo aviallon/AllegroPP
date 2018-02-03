@@ -2,6 +2,54 @@
 #include <string>
 #include "allegro.h"
 
+inline int between(double x, int min, int max){
+	return floor((x>max) ? max : ((x<min) ? min : x));
+}
+
+class Color {
+public:
+	Color(int r, int g, int b){
+		_r = between(r, 0, 255);
+		_g = between(g, 0, 255);
+		_b = between(b, 0, 255);
+	}
+	
+	Color(){
+		Color(0, 0, 0);
+	}
+	
+	Color(bool notColor){
+		Color(0, 0, 0);
+		this->notColor = notColor;
+	}
+	
+	Color operator*(double k){
+		return Color(this->_r*k, this->_g*k, this->_b*k);
+	}
+	
+	Color operator/(double k){
+		return Color(this->_r/k, this->_g/k, this->_b/k);
+	}
+	
+	Color operator+(const Color& c){
+		return Color(this->_r+c._r, this->_g+c._g, this->_b+c._b);
+	}
+	
+	Color mix(const Color& c){
+		return Color(between(this->_r, 0, c._r), between(this->_g, 0, c._g), between(this->_b, 0, c._b));
+	}
+	
+	Color blend(const Color& c){
+		return Color((this->_r + c._r)/2, (this->_g + c._g)/2, (this->_b + c._b)/2);
+	}
+	
+	ALLEGRO_COLOR toAllegro(){
+		return al_map_rgb(_r, _g, _b);
+	}
+	
+	int _r, _g, _b;
+	bool notColor = false;
+};
 
 class Button {
 private:
@@ -17,6 +65,7 @@ public:
 	uint16_t id;
 	long data;
 	std::string name;
+	
 	void (*btn_clicked)(Allegro*, Button*);
 	
 	bool isInside(int x, int y){
@@ -53,7 +102,7 @@ public:
 		if(state == 1)
 			color = allegro_ptr->rgb(100, 100, 200);
 		else if(state == 0)
-			color = allegro_ptr->rgb(100, 100, 100);
+			color = allegro_ptr->rgba(100, 100, 100, 0);
 		else if(state == 2){
 			color = allegro_ptr->rgb(100, 100, 150);
 		}
@@ -280,6 +329,21 @@ public:
 		messages.push_back(Message(message, duration, allegro->getTime()));
 	}
 	
+	int getBtnIndexByID(int id){
+		for(unsigned i = 0; i<= buttons.size(); i++){
+			if (buttons[i].id == id){
+				return i;
+			}
+		}
+	}
+	
+	void eraseBtn(Button* btn){
+		for(unsigned i = 0; i<= buttons.size(); i++){
+			if (buttons[i].id == btn->id){
+				buttons.erase(buttons.begin() + i);
+			}
+		}
+	}
 	Allegro* allegro;
 
 	int cursor = -1;
