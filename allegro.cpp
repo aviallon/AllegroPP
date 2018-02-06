@@ -229,9 +229,9 @@ void Allegro::draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, ALL
 	al_draw_text(font, color, x, y, ALLEGRO_ALIGN_CENTRE, c_text);
 }
 
-void Allegro::draw_text(int x, int y, std::string text, ALLEGRO_COLOR color){
+void Allegro::draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align){
 	const char *c_text = text.c_str();
-	al_draw_text(default_font, color, x, y, ALLEGRO_ALIGN_CENTRE, c_text);
+	al_draw_text(default_font, color, x, y, align, c_text);
 }
 
 void Allegro::draw_text(int x, int y, const char* text, ALLEGRO_COLOR color){

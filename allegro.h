@@ -128,7 +128,7 @@ public:
 	void draw_rectangle(int x1, int y1, int x2, int y2);
 	
 	void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, ALLEGRO_FONT* font);
-	void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color);
+	void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align = ALLEGRO_ALIGN_CENTER);
 	void draw_text(int x, int y, const char* text, ALLEGRO_COLOR color);
 	
 	void draw_image(int x, int y, ALLEGRO_BITMAP* image);
