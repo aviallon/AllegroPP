@@ -1,4 +1,4 @@
-#include "../allegro/allegro.h"
+#include "../allegro.h"
 #include <iostream>
 #include <string>
 #include <exception>
@@ -339,18 +339,20 @@ int main(int argc, const char** args) {
 	//allegro->showDialogMessage("Test", "Pomme", "Un fruit", "Ok", ALLEGRO_MESSAGEBOX_QUESTION);
 	//cout << allegro->askFile("./", "Fichier", "", ALLEGRO_FILECHOOSER_FILE_MUST_EXIST) << endl;
 	
-	allegro->getGUI()->newBtn(allegro, "Exit", 3, 3, 40, 70, &exitBtn);
+	allegro->getGUI()->newBtn("Exit", 3, 3, 40, 70, &exitBtn);
 	
-	allegro->getGUI()->newBtn(allegro, "Bleu", 70+20, 3, 40, 80, &changeColorBtn);
-	allegro->getGUI()->newBtn(allegro, "Carré", 70+20+80+20, 3, 40, 60, &changeShape);
-	savebtn = allegro->getGUI()->newBtn(allegro, "Sauvegarder", 70+20+80+20+60+20, 3, 40, 80, &saveTheWorld);
+	allegro->getGUI()->newBtn("Bleu", 70+20, 3, 40, 80, &changeColorBtn);
+	allegro->getGUI()->newBtn("Carré", 70+20+80+20, 3, 40, 60, &changeShape);
+	savebtn = allegro->getGUI()->newBtn("Sauvegarder", 70+20+80+20+60+20, 3, 40, 80, &saveTheWorld);
 	//cout << savebtn->id << endl;
-	//allegro->getGUI()->newImage(allegro, "./linux.png", 50, 50, 0, 0);
+	allegro->getGUI()->newImage("./linux.png", 50, 50, 0, 0);
 	
 	if(argc > 1){
 		loadTheWorld(world, args[argc-1]);
 	}
-	
+	/** @TODO manger des frites
+	 * 
+	 * /
 	allegro->setRedrawFunction(&redraw);
 
 	allegro->gameLoop();
