@@ -109,6 +109,10 @@ public:
 	static const uint16_t MOUSE_WHEELED = 1<<5;
 	static const uint16_t MOUSE_MOVED_DELTA = 1<<6;
 	
+	ALLEGRO_COLOR white;
+	ALLEGRO_COLOR black;
+	
+	
 	struct ALLEGRO_COLOR rgb(int r, int g, int b);
 	struct ALLEGRO_COLOR rgba(int r, int g, int b, int a);
 	
@@ -127,9 +131,9 @@ public:
 	void draw_rectangle(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width, bool filled);
 	void draw_rectangle(int x1, int y1, int x2, int y2);
 	
-	void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, ALLEGRO_FONT* font);
+	void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align, ALLEGRO_FONT* font);
 	void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align = ALLEGRO_ALIGN_CENTER);
-	void draw_text(int x, int y, const char* text, ALLEGRO_COLOR color);
+	void draw_text(int x, int y, const char* text, ALLEGRO_COLOR color, int align = ALLEGRO_ALIGN_CENTER);
 	
 	void draw_image(int x, int y, ALLEGRO_BITMAP* image);
 	void draw_scaled_image(int x, int y, int w, int h, ALLEGRO_BITMAP* image);

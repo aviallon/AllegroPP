@@ -224,9 +224,9 @@ void Allegro::draw_rectangle(int x1, int y1, int x2, int y2){
 	al_draw_rectangle((float)x1, (float)y1, (float)x2, (float)y2, al_map_rgb(0,0,0), 1);
 }
 
-void Allegro::draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, ALLEGRO_FONT* font){
+void Allegro::draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align, ALLEGRO_FONT* font){
 	const char *c_text = text.c_str();
-	al_draw_text(font, color, x, y, ALLEGRO_ALIGN_CENTRE, c_text);
+	al_draw_text(font, color, x, y, align, c_text);
 }
 
 void Allegro::draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align){
@@ -234,9 +234,9 @@ void Allegro::draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int
 	al_draw_text(default_font, color, x, y, align, c_text);
 }
 
-void Allegro::draw_text(int x, int y, const char* text, ALLEGRO_COLOR color){
+void Allegro::draw_text(int x, int y, const char* text, ALLEGRO_COLOR color, int align){
 	/* Draws text on the screen at the specifed coordinates. Add "\0" at the end of your string to avoid the appearance of weird characters. */
-	al_draw_text(default_font, color, x, y, ALLEGRO_ALIGN_CENTRE, text);
+	al_draw_text(default_font, color, x, y, align, text);
 }
 
 void Allegro::draw_image(int x, int y, ALLEGRO_BITMAP* image){
@@ -339,6 +339,9 @@ int Allegro::init()
 	#ifdef __ENABLE_GUI__
 	gui_ptr = (void*)(new GUI(this));
 	#endif
+
+	white = al_map_rgb(255, 255, 255);
+	black = al_map_rgb(0, 0, 0);
 
     return 0;
 }

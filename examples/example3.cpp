@@ -350,9 +350,7 @@ int main(int argc, const char** args) {
 	if(argc > 1){
 		loadTheWorld(world, args[argc-1]);
 	}
-	/** @TODO manger des frites
-	 * 
-	 * /
+	
 	allegro->setRedrawFunction(&redraw);
 
 	allegro->gameLoop();
