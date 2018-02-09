@@ -411,8 +411,8 @@ int Allegro::createWindow(float FPS, int width, int height)
 
 #if (defined (LINUX) || defined (__linux__))
 	/* load font from memory */
-	extern uint8_t arial_data[]	asm("_binary_allegro_arial_ttf_start");
-	extern uint8_t arial_data_size[]	asm("_binary_allegro_arial_ttf_size");
+	extern uint8_t arial_data[]	asm("_binary_allegro_fonts_arimo_regular_ttf_start");
+	extern uint8_t arial_data_size[]	asm("_binary_allegro_fonts_arimo_regular_size");
 
 	size_t arial_size = (size_t)((void *)arial_data_size);
 
@@ -427,7 +427,7 @@ int Allegro::createWindow(float FPS, int width, int height)
 	__asm mov _binary_allegro_arial_ttf_start, [ebx]arial_data
 	__asm mov _binary_allegro_arial_ttf_size, [ebx]arial_data_size*/
 
-	default_font = al_load_ttf_font("arial.ttf", 25, 0);
+	default_font = al_load_ttf_font("fonts/Arimo-Regular.ttf", 25, 0);
 
 #endif
 	
