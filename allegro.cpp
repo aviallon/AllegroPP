@@ -36,6 +36,7 @@ Allegro::Allegro()
 	animate_func_ptr = &Allegro::_undefined_;
 	key_down_func_ptr = &Allegro::_undefined_;
 	key_up_func_ptr = &Allegro::_undefined_;
+	window_resized_func_ptr = &Allegro::_undefined_;
 	
 	keys = std::vector<bool>(255, false);
 	mouseBtns = std::vector<bool>(4, false);
@@ -94,6 +95,10 @@ void Allegro::_exec_key_up_function(uint8_t keycode){
 	key_up_func_ptr(this, context, KEY_UP, keycode);
 }
 
+void Allegro::_exec_window_resized_function(){
+	window_resized_func_ptr(this, context, WINDOW_RESIZED, getDisplayWidth(), getDisplayHeight());
+}
+
 void Allegro::bindMouseClick(void (*fptr)(Allegro*, void*, uint16_t, int, int)){
 	mouse_clicked_func_ptr = fptr;
 }
@@ -108,6 +113,10 @@ void Allegro::bindKeyDown(void (*fptr)(Allegro*, void*, uint16_t, uint8_t)){
 
 void Allegro::bindKeyUp(void (*fptr)(Allegro*, void*, uint16_t, uint8_t)){
 	key_up_func_ptr = fptr;
+}
+
+void Allegro::bindWindowResized( void(*fptr)(Allegro*, void*, uint16_t, int, int) ){
+	window_resized_func_ptr = fptr;
 }
 
 bool Allegro::isKeyDown(int keycode){
@@ -171,6 +180,10 @@ void Allegro::setStickCursorToCenter(bool stick){
 		al_inhibit_screensaver(false);
 		al_ungrab_mouse();
 	}
+}
+
+void Allegro::setSystemCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR id){
+	al_set_system_mouse_cursor(display, id);
 }
 
 void Allegro::quit(){
@@ -289,6 +302,10 @@ int Allegro::getTextWidth(const char* text){
 	return al_get_text_width(default_font, text);
 }
 
+int Allegro::getFontHeight(ALLEGRO_FONT* font){
+	return al_get_font_line_height(font);
+}
+
 
 struct ALLEGRO_COLOR Allegro::rgb(int r, int g, int b){
 	return al_map_rgb(r, g, b);
@@ -356,6 +373,24 @@ int Allegro::getDisplayWidth(){
 
 int Allegro::getDisplayHeight(){
 	return al_get_display_height(display);
+}
+
+ALLEGRO_FONT* Allegro::getDefaultFont(int fs){
+	if(fs == -1)
+		return default_font;
+	else {
+		#if (defined (LINUX) || defined (__linux__))
+			/* arial_file already in memory */
+			fonts.push_back(al_load_ttf_font_f(arial_file, 0, fs, 0));
+
+			/* yep, the font file is embeded in the executable at link time :D */
+		#endif
+		#if (defined (_WIN32) || defined (_WIN64))
+			fonts.push_back(al_load_ttf_font("fonts/Arimo-Regular.ttf", fs, 0));
+		#endif
+		
+		return fonts.back();
+	}
 }
 
 void Allegro::toggleFullscreen(bool activate){
@@ -427,7 +462,7 @@ int Allegro::createWindow(float FPS, int width, int height)
 	__asm mov _binary_allegro_arial_ttf_start, [ebx]arial_data
 	__asm mov _binary_allegro_arial_ttf_size, [ebx]arial_data_size*/
 
-	default_font = al_load_ttf_font("fonts/Arimo-Regular.ttf", 25, 0);
+	default_font = al_load_ttf_font("fonts/Arimo-Regular.ttf", 12, 0);
 
 #endif
 	
@@ -464,6 +499,7 @@ void Allegro::gameLoop()
         al_wait_for_event(event_queue, &ev);
 		
 		if(ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE){
+			_exec_window_resized_function();
 			al_acknowledge_resize(display);
 			//WIDTH = getDisplayWidth();
 			//HEIGHT = getDisplayHeight();
@@ -477,7 +513,7 @@ void Allegro::gameLoop()
 				btnEv = MOUSE_L_CLICKED;
 			else
 				btnEv = MOUSE_R_CLICKED;
-			getGUI()->checkBtnClick(btnEv | MOUSE_DOWN, mouse.getX(), mouse.getY());
+			getGUI()->mouseClickHandle(btnEv | MOUSE_DOWN, mouse.getX(), mouse.getY());
 			#endif
 			
 			_exec_mouse_clicked_function(MOUSE_DOWN);
@@ -491,7 +527,7 @@ void Allegro::gameLoop()
 				btnEv = MOUSE_L_CLICKED;
 			else
 				btnEv = MOUSE_R_CLICKED;
-			getGUI()->checkBtnClick(btnEv | MOUSE_UP, mouse.getX(), mouse.getY());
+			getGUI()->mouseClickHandle(btnEv | MOUSE_UP, mouse.getX(), mouse.getY());
 			#endif
 			
 			_exec_mouse_clicked_function(MOUSE_UP);
@@ -509,16 +545,41 @@ void Allegro::gameLoop()
 			#ifdef __ENABLE_GUI__
 			getGUI()->drawCursor(mouse.getX(), mouse.getY());
 			
-			getGUI()->btnHovering(MOUSE_MOVED, mouse.getX(), mouse.getY());
+			getGUI()->mouseHoveringHandle(MOUSE_MOVED, mouse.getX(), mouse.getY());
 			#endif
 			
 			if(cursorSticked)
 				al_set_mouse_xy(display, al_get_display_height(display)/2, al_get_display_width(display)/2);
 			
 		} else if(ev.type == ALLEGRO_EVENT_KEY_DOWN){
-			_exec_key_down_function(ev.keyboard.keycode);
+			
+			#ifdef __ENABLE_GUI__
+			getGUI()->keyHandle(KEY_DOWN, ev.keyboard.keycode, 0);
+			
+			if(getGUI()->keyboardCapture == 0){
+			#endif
+				_exec_key_down_function(ev.keyboard.keycode);
+			#ifdef __ENABLE_GUI__
+			}
+			#endif
 		} else if(ev.type == ALLEGRO_EVENT_KEY_UP){
-			_exec_key_up_function(ev.keyboard.keycode);
+			
+			#ifdef __ENABLE_GUI__
+			getGUI()->keyHandle(KEY_UP, ev.keyboard.keycode, 0);
+			
+			if(getGUI()->keyboardCapture == 0){
+			#endif
+				_exec_key_up_function(ev.keyboard.keycode);
+			#ifdef __ENABLE_GUI__
+			}
+			#endif
+		}
+		
+		if(ev.type == ALLEGRO_EVENT_KEY_CHAR){
+			#ifdef __ENABLE_GUI__
+			getGUI()->keyHandle(KEY_CHAR, ev.keyboard.keycode, ev.keyboard.unichar);
+			#endif
+			//ev.keyboard.unichar;
 		}
 		
 		
@@ -548,6 +609,8 @@ void Allegro::gameLoop()
 			#ifdef __ENABLE_GUI__
 			
 			getGUI()->drawAllBtns();
+			
+			getGUI()->drawAllInputBoxes();
 			
 			getGUI()->drawLastMessage();
 			

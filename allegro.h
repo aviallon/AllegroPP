@@ -14,6 +14,7 @@
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/file.h>
 #include <cmath>
+#include <cctype>
 #include <vector>
 #include <algorithm>
 
@@ -33,6 +34,7 @@ class Button;
 class GUI;
 class Image;
 class Bitmap;
+class InputBox;
 
 typedef unsigned char uchar;
 
@@ -53,6 +55,8 @@ private:
 	
 	void (*key_down_func_ptr)(Allegro*, void*, uint16_t, uint8_t);
 	void (*key_up_func_ptr)(Allegro*, void*, uint16_t, uint8_t);
+	
+	void (*window_resized_func_ptr)(Allegro*, void*, uint16_t, int, int);
 	
 	void (*redraw_func_ptr)(Allegro*, float);
 	void (*animate_func_ptr)(Allegro*, float);
@@ -75,11 +79,15 @@ private:
 	void _exec_key_up_function(uint8_t keycode);
 	void _exec_key_repeat_function();
 	
+	void _exec_window_resized_function();
+	
 	ALLEGRO_EVENT_SOURCE user_generated;
 	
 	
 	float m_FPS;
 	bool cursorSticked = false;
+	
+	std::vector<ALLEGRO_FONT*> fonts;
 
 public:
     Allegro();
@@ -95,19 +103,23 @@ public:
 	void bindKeyDown(void (*fptr)(Allegro*, void*, uint16_t, uint8_t));
 	void bindKeyUp(void (*fptr)(Allegro*, void*, uint16_t, uint8_t));
 	
+	void bindWindowResized( void(*fptr)(Allegro*, void*, uint16_t, int, int) );
+	
 	void setRedrawFunction(void (*fptr)(Allegro*, float));
 	void setAnimateFunction(void (*fptr)(Allegro*, float));
 	
 	static const uint16_t MOUSE_R_CLICKED = 1<<0;
-	static const uint16_t MOUSE_L_CLICKED = 1<<7;
-	static const uint16_t MOUSE_DOWN = 1<<8;
-	static const uint16_t MOUSE_UP = 1<<9;
-	static const uint16_t MOUSE_MOVED = 1<<1;
-	static const uint16_t KEY_DOWN = 1<<2;
-	static const uint16_t KEY_UP = 1<<3;
-	static const uint16_t KEY_REPEAT = 1<<4;
-	static const uint16_t MOUSE_WHEELED = 1<<5;
-	static const uint16_t MOUSE_MOVED_DELTA = 1<<6;
+	static const uint16_t MOUSE_L_CLICKED = 1<<1;
+	static const uint16_t MOUSE_DOWN = 1<<2;
+	static const uint16_t MOUSE_UP = 1<<3;
+	static const uint16_t MOUSE_MOVED = 1<<4;
+	static const uint16_t KEY_DOWN = 1<<5;
+	static const uint16_t KEY_UP = 1<<6;
+	static const uint16_t KEY_REPEAT = 1<<7;
+	static const uint16_t KEY_CHAR = 1<<8;
+	static const uint16_t MOUSE_WHEELED = 1<<9;
+	static const uint16_t MOUSE_MOVED_DELTA = 1<<10;
+	static const uint16_t WINDOW_RESIZED = 1<<11;
 	
 	ALLEGRO_COLOR white;
 	ALLEGRO_COLOR black;
@@ -143,9 +155,9 @@ public:
 	int getTextWidth(std::string text, ALLEGRO_FONT* font);
 	int getTextWidth(const char* text);
 	
-	ALLEGRO_FONT* getDefaultFont(){
-		return default_font;
-	}
+	int getFontHeight(ALLEGRO_FONT* font);
+	
+	ALLEGRO_FONT* getDefaultFont(int fs=-1);
 	
 	int showDialogMessage(char const *title, char const *heading, char const *text, char const *buttons, int flags);
 	const char* askFile(char const* initial_path, char const* title, char const* patterns, int mode);
@@ -156,6 +168,7 @@ public:
 	
 	void setCursorVisibility(bool visible);
 	void setStickCursorToCenter(bool stick);
+	void setSystemCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR id);
 	
 	void stopRedraw();
 	void resumeRedraw();
