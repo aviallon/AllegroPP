@@ -499,8 +499,8 @@ void Allegro::gameLoop()
         al_wait_for_event(event_queue, &ev);
 		
 		if(ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE){
-			_exec_window_resized_function();
 			al_acknowledge_resize(display);
+			_exec_window_resized_function();
 			//WIDTH = getDisplayWidth();
 			//HEIGHT = getDisplayHeight();
 		}else if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN){

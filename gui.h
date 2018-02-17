@@ -291,12 +291,29 @@ public:
 		}
 	}
 	
+	int getCurPosFromX(int x){
+		uint_fast16_t prev_distance = UINT16_MAX;
+		int pos = 0;
+		for(unsigned i = 0; i<=text.length(); i++){
+			uint_fast16_t distance = abs(x - allegro_ptr->getTextWidth(text.substr(0, i).c_str()));
+			if(distance < prev_distance){
+				pos = i;
+				prev_distance = distance;
+			}
+		}
+		return pos;
+	}
+	
 	void click(int x, int y, uint16_t ev){
 		if (not(ev & Allegro::MOUSE_DOWN)){
 			return;
 		}
 		if(isInside(x, y)){
 			setState(2);
+			int x_pos = x-(this->x + 3);
+			
+			cur_pos = getCurPosFromX(x_pos);
+			//std::cout << getCurPosFromX(x_pos) << std::endl;
 		} else {
 			setState(0);
 		}
@@ -384,7 +401,7 @@ public:
 			std::chrono::time_point<std::chrono::system_clock> mnt = std::chrono::system_clock::now();
 			uint_fast32_t tmp = mnt.time_since_epoch().count()/1000000;
 			//std::cout << tmp << std::endl;
-			if( tmp%1500 > 750 )
+			if( tmp%1000 > 500 )
 				drawCaret();
 		}
 	}
