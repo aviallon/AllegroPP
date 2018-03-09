@@ -85,17 +85,66 @@ public:
     Allegro();
     ~Allegro();
 
+	/**
+	 * @brief Inits allegro. Required before doing anything else.
+	 * @return Returns 0 if no errors are encountered.
+	 */
     int init();
+	
+	/**
+	 * @brief Creates a window.
+	 * 
+	 * Only one active window is currently supported.
+	 * @param FPS Framerate of the window. Events will be polled FPS times a second.
+	 * @param w Width of the window
+	 * @param h Height of the window
+	 * @return Returns 0 if no errors are encountered.
+	 */
     int createWindow(float FPS, int w, int h);
+	
+	/**
+	 * @brief Starts the event loop. Stops when users click on window close.
+	 */
     void gameLoop();
 	
+	/**
+	 * @brief Calls the given function when the mouse is clicked.
+	 * @param fptr Pointer to a function matching this footprint : void onMouseClick(Allegro* allegro, void* context, uint16_t event, int x, int y)
+	 */
 	void bindMouseClick(void (*fptr)(Allegro*, void*, uint16_t, int, int));
+	
+	/**
+	 * @brief Calls the given function when the mouse is moved.
+	 * @param fptr Pointer to a function matching this footprint : void onMouseMove(Allegro* allegro, void* context, uint16_t event, int x, int y)
+	 */
 	void bindMouseMove(void (*fptr)(Allegro*, void*, uint16_t, int, int));
 	
+	/**
+	 * @brief Calls the given function when a key is downed.
+	 * @param fptr Pointer to a function matching this footprint : void onKeyDown(Allegro* allegro, void* context, uint16_t event, uint8_t keycode)
+	 */
 	void bindKeyDown(void (*fptr)(Allegro*, void*, uint16_t, uint8_t));
+	
+	/**
+	 * @brief Calls the given function when a key is upped.
+	 * @param fptr Pointer to a function matching this footprint : void onKeyUp(Allegro* allegro, void* context, uint16_t event, uint8_t keycode)
+	 */
 	void bindKeyUp(void (*fptr)(Allegro*, void*, uint16_t, uint8_t));
 	
+	/**
+	 * @brief Set the function called when the screen has to be redrawn.
+	 * 
+	 * You basically draw all your stuff here. Weird glitches will happen if you draw during other events.
+	 * @param fptr Pointer to a function matching this footprint : void redraw(Allegro* allegro, float FPS)
+	 */
 	void setRedrawFunction(void (*fptr)(Allegro*, float));
+	
+	/**
+	 * @brief Function called - exactly FPS times a second - for animations
+	 * 
+	 * It's better to do animations here as it won't suffer effects cause by slow rendering in the redraw function or things like that.
+	 * @param fptr Pointer to a function matching this footprint : void animate(Allegro* allegro, float FPS)
+	 */
 	void setAnimateFunction(void (*fptr)(Allegro*, float));
 	
 	static const uint16_t MOUSE_R_CLICKED = 1<<0;
@@ -109,28 +158,110 @@ public:
 	static const uint16_t MOUSE_WHEELED = 1<<5;
 	static const uint16_t MOUSE_MOVED_DELTA = 1<<6;
 	
-	ALLEGRO_COLOR white;
-	ALLEGRO_COLOR black;
+	ALLEGRO_COLOR white; //!< Defined to white color during init()
+	ALLEGRO_COLOR black; //!< Defined to black color during init()
 	
-	
+	/**
+	 * @brief Returns an allegro color struct by giving color as Red Green Blue.
+	 * 
+	 * Values have to be between 0 and 255.
+	 * @param r Red color
+	 * @param g Green color
+	 * @param b Blue color
+	 * @return Returns an Allegro color struct
+	 */
 	struct ALLEGRO_COLOR rgb(int r, int g, int b);
+	
+	/**
+	 * @brief Returns an allegro color struct by giving color as Red Green Blue and Alpha.
+	 * 
+	 * Values have to be between 0 and 255.
+	 * @param r Red color
+	 * @param g Green color
+	 * @param b Blue color
+	 * @param a Alpha channel - for transparency
+	 * @return Returns an Allegro color struct
+	 */
 	struct ALLEGRO_COLOR rgba(int r, int g, int b, int a);
 	
 	/* Les fonctions pour dessiner ! Enfin ! */
 	
+	/**
+	 * @brief Sets a pixel to the specified color at the specified coordinates
+	 * @param x Abscissa of the pixel
+	 * @param y Ordinate of the pixel
+	 * @param color Well, the pixel's color
+	 */
 	void set_pixel(int x, int y, ALLEGRO_COLOR color);
 	
-	void draw_line(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width);
+	/**
+	 * @brief Draws a line between the two specified pixels.
+	 * @param x1 First pixel's abscissa
+	 * @param y1 First pixel's ordinate
+	 * @param x2 Second pixel's abscissa
+	 * @param y2 Second pixel's ordinate
+	 * @param color Line color
+	 * @param width Line width (in pixels). Default : 1px
+	 */
+	void draw_line(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width = 1);
 	void draw_line(int x1, int y1, int x2, int y2);
 	
-	void draw_ellipse(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width, bool filled);
+	/**
+	 * @brief Draws an ellipsis inside the specified rect.
+	 * 
+	 * It means that if you draw a rectangle exactly surrounding your ellipsis, then the top-left pixel will be pixel 1 and the bottom-right pixel will be pixel 2.
+	 * @param x1 First pixel's abscissa
+	 * @param y1 First pixel's ordinate
+	 * @param x2 Second pixel's abscissa
+	 * @param y2 Second pixel's ordinate
+	 * @param color Ellipsis color
+	 * @param width Ellipsis border's width. Default : 1px
+	 * @param filled Fills the ellipsis with its border's color. Default : false
+	 */
+	void draw_ellipse(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width = 1, bool filled = false);
+	/**
+	 * @brief Draws an ellipsis inside the specified rect in black.
+	 * @param x1 First pixel's abscissa
+	 * @param y1 First pixel's ordinate
+	 * @param x2 Second pixel's abscissa
+	 * @param y2 Second pixel's ordinate
+	 */
 	void draw_ellipse(int x1, int y1, int x2, int y2);
 	
-	void draw_ellipse_r(int cx, int cy, int rx, int ry, ALLEGRO_COLOR color, int width, bool filled);
+	/**
+	 * @brief Draws an ellipsis at the specified point with given radius.
+	 * @param cx Center's absissa
+	 * @param cy Center's ordinate
+	 * @param rx Horizontal radius. Must be positive.
+	 * @param ry Vertical radius. Must be positive.
+	 * @param color Ellipsis' color
+	 * @param width Ellipsis' width. Default : 1px
+	 * @param filled Fills the ellipsis with its border's color. Default : false
+	 */
+	void draw_ellipse_r(int cx, int cy, int rx, int ry, ALLEGRO_COLOR color, int width = 1, bool filled = false);
 	
-	void draw_rectangle(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width, bool filled);
+	/**
+	 * @brief Draws a rectangle.
+	 * @param x1 Topleft abscissa
+	 * @param y1 Topleft ordinate
+	 * @param x2 Bottom-right abscissa
+	 * @param y2 Bottom-right ordinate
+	 * @param color Rectangle's color
+	 * @param width Rectangle's width. Default : 1px
+	 * @param filled Fills the rectangle with its border's color. Default : false
+	 */
+	void draw_rectangle(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width = 1, bool filled = false);
 	void draw_rectangle(int x1, int y1, int x2, int y2);
 	
+	/**
+	 * @brief Draws text at the specified point with the given font
+	 * @param x Abscissa
+	 * @param y Ordinate
+	 * @param text The text as a std::string
+	 * @param color Text's color
+	 * @param align Text align. Can be ALLEGRO_ALIGN_(LEFT|RIGHT|CENTER|CENTRE) (CENTRE and CENTER are the same)
+	 * @param font Font in ALLEGRO_FONT format. You can grab the default one using getDefaultFont();
+	 */
 	void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align, ALLEGRO_FONT* font);
 	void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align = ALLEGRO_ALIGN_CENTER);
 	void draw_text(int x, int y, const char* text, ALLEGRO_COLOR color, int align = ALLEGRO_ALIGN_CENTER);

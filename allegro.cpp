@@ -189,14 +189,14 @@ void Allegro::draw_line(int x1, int y1, int x2, int y2){
 }
 
 // ELLIPSE
-void Allegro::draw_ellipse_r(int cx, int cy, int rx, int ry, ALLEGRO_COLOR color, int width, bool filled = false){
+void Allegro::draw_ellipse_r(int cx, int cy, int rx, int ry, ALLEGRO_COLOR color, int width, bool filled){
 	if(filled)
 		al_draw_filled_ellipse((float)cx, (float)cy, (float)rx, (float)ry, color);
 	else
 		al_draw_ellipse((float)cx, (float)cy, (float)rx, (float)ry, color, (float)width);
 }
 
-void Allegro::draw_ellipse(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width, bool filled = false){
+void Allegro::draw_ellipse(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width, bool filled){
 	int cx = (x1+x2)/2;
 	int cy = (y1+y2)/2;
 	int rx = (x2-x1)/2;
@@ -213,7 +213,7 @@ void Allegro::draw_ellipse(int x1, int y1, int x2, int y2){
 
 
 // RECTANGLE
-void Allegro::draw_rectangle(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width, bool filled = false){
+void Allegro::draw_rectangle(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width, bool filled){
 	if(filled)
 		al_draw_filled_rectangle((float)x1, (float)y1, (float)x2, (float)y2, color);
 	else
