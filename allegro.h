@@ -139,17 +139,15 @@ public:
 	 */
 	void bindKeyUp(void (*fptr)(Allegro*, void*, uint16_t, uint8_t));
 	
-<<<<<<< HEAD
 	void bindWindowResized( void(*fptr)(Allegro*, void*, uint16_t, int, int) );
 	
-=======
 	/**
 	 * @brief Set the function called when the screen has to be redrawn.
 	 * 
 	 * You basically draw all your stuff here. Weird glitches will happen if you draw during other events.
 	 * @param fptr Pointer to a function matching this footprint : void redraw(Allegro* allegro, float FPS)
 	 */
->>>>>>> 40a56425e26c92c501ab5b01398193c71ac477bb
+
 	void setRedrawFunction(void (*fptr)(Allegro*, float));
 	
 	/**
