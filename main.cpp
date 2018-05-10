@@ -1,5 +1,7 @@
 #include "../allegro/allegro.h"
 
+using namespace std;
+
 int i = 0;
 int i2 = 128;
 void fen1redr(Allegro* allegro, float FPS){
@@ -20,6 +22,14 @@ void testBtn(Allegro* allegro, Button* btn){
 	std::cout << btn->name << std::endl;
 }
 
+void onMouseMove(Allegro* allegro, void* context, uint16_t event, int x, int y){
+	cout << "(" << x << ";" << y << ")" << endl;
+}
+
+void onKeyUp(Allegro* allegro, void* context, uint16_t event, uint8_t keycode){
+	cout << int(keycode) << endl;
+}
+
 int main(){
 	Allegro::init(); // Required before doing anything else
 	
@@ -31,6 +41,9 @@ int main(){
 
 	fen1->setRedrawFunction(&fen1redr);
 	fen2->setRedrawFunction(&fen2redr);
+	
+	//fen1->bindMouseMove(&onMouseMove);
+	fen1->bindKeyUp(&onKeyUp);
 	
 	fen1->getGUI()->newBtn("Test", 0, 0, 60, 150, &testBtn);
 	fen2->getGUI()->newBtn("Pomme", 100, 0, 60, 150, &testBtn);

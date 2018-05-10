@@ -554,44 +554,15 @@ void Allegro::_loop(){
 	if(ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE){
 		al_acknowledge_resize(display);
 		_exec_window_resized_function();
-		//WIDTH = getDisplayWidth();
-		//HEIGHT = getDisplayHeight();
 	}
-	if(focus){
-		if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN){
-			mouseBtns[ev.mouse.button] = true;
-			mouse.setBtn(ev.mouse.button);
-			
-			#ifdef __ENABLE_GUI__
-			int btnEv = 0;
-			if(mouse.getBtn() == 1)
-				btnEv = MOUSE_L_CLICKED;
-			else
-				btnEv = MOUSE_R_CLICKED;
-			getGUI()->mouseClickHandle(btnEv | MOUSE_DOWN, mouse.getX(), mouse.getY());
-			#endif
-			
-			_exec_mouse_clicked_function(MOUSE_DOWN);
-		}else if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-			mouseBtns[ev.mouse.button] = false;
-			mouse.setBtn(ev.mouse.button);
-			
-			#ifdef __ENABLE_GUI__
-			int btnEv = 0;
-			if(mouse.getBtn() == 1)
-				btnEv = MOUSE_L_CLICKED;
-			else
-				btnEv = MOUSE_R_CLICKED;
-			getGUI()->mouseClickHandle(btnEv | MOUSE_UP, mouse.getX(), mouse.getY());
-			#endif
-			
-			_exec_mouse_clicked_function(MOUSE_UP);
-		}
-		else if(ev.type == ALLEGRO_EVENT_MOUSE_AXES || ev.type == ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY) { 
-			al_get_mouse_state(mouse.getStatePtr());
-			mouse.setDZ(ev.mouse.dz);
-			mouse.setDX(ev.mouse.dx);
-			mouse.setDY(ev.mouse.dy);
+	if(ev.type == ALLEGRO_EVENT_MOUSE_AXES || ev.type == ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY) { 
+		al_get_mouse_state(mouse.getStatePtr());
+		mouse.setDZ(ev.mouse.dz);
+		mouse.setDX(ev.mouse.dx);
+		mouse.setDY(ev.mouse.dy);
+		
+		if(mouse.getStatePtr()->display == display){
+		
 			if(ev.mouse.dz != 0){
 				_exec_mouse_moved_function(MOUSE_WHEELED);
 			}
@@ -602,11 +573,57 @@ void Allegro::_loop(){
 			
 			getGUI()->mouseHoveringHandle(MOUSE_MOVED, mouse.getX(), mouse.getY());
 			#endif
+		
+		}
+		
+		if(cursorSticked)
+			al_set_mouse_xy(display, al_get_display_height(display)/2, al_get_display_width(display)/2);
+		
+	}
+	if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN){
+		al_get_mouse_state(mouse.getStatePtr()); // Needed to avoid visual bugs with GUI
+		
+		mouseBtns[ev.mouse.button] = true;
+		mouse.setBtn(ev.mouse.button);
+		
+		if(focus){
+			#ifdef __ENABLE_GUI__
+			int btnEv = 0;
+			if(mouse.getBtn() == 1)
+				btnEv = MOUSE_L_CLICKED;
+			else
+				btnEv = MOUSE_R_CLICKED;
+				
+			getGUI()->mouseClickHandle(btnEv | MOUSE_DOWN, mouse.getX(), mouse.getY());
+			getGUI()->mouseHoveringHandle(MOUSE_MOVED, mouse.getX(), mouse.getY());
+			#endif
 			
-			if(cursorSticked)
-				al_set_mouse_xy(display, al_get_display_height(display)/2, al_get_display_width(display)/2);
+			_exec_mouse_clicked_function(MOUSE_DOWN);
 			
-		} else if(ev.type == ALLEGRO_EVENT_KEY_DOWN){
+		}
+	}else if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+		al_get_mouse_state(mouse.getStatePtr()); // Needed to avoid visual bugs with GUI
+		
+		mouseBtns[ev.mouse.button] = false;
+		mouse.setBtn(ev.mouse.button);
+		
+		if(focus){
+			#ifdef __ENABLE_GUI__
+			int btnEv = 0;
+			if(mouse.getBtn() == 1)
+				btnEv = MOUSE_L_CLICKED;
+			else
+				btnEv = MOUSE_R_CLICKED;
+				
+			getGUI()->mouseClickHandle(btnEv | MOUSE_UP, mouse.getX(), mouse.getY());
+			getGUI()->mouseHoveringHandle(MOUSE_MOVED, mouse.getX(), mouse.getY());
+			#endif
+			
+			_exec_mouse_clicked_function(MOUSE_UP);
+		}
+	}
+	if(focus){
+		if(ev.type == ALLEGRO_EVENT_KEY_DOWN){
 			
 			#ifdef __ENABLE_GUI__
 			getGUI()->keyHandle(KEY_DOWN, ev.keyboard.keycode, 0);
