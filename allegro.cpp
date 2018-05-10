@@ -1,6 +1,13 @@
 #include "allegro.h"
 //#include "avlib.h"
 
+std::vector<Allegro*> Allegro::instances;
+unsigned Allegro::loops; // Stop loop when it reaches 0
+ALLEGRO_COLOR Allegro::white;
+ALLEGRO_COLOR Allegro::black;
+ALLEGRO_FILE *Allegro::arial_file;
+ALLEGRO_FONT *Allegro::default_font;
+
 void Allegro::_undefined_(Allegro* master, void* context, uint16_t event, int x, int y){
 	// Do nothing
 }
@@ -25,10 +32,10 @@ Allegro::Allegro()
 {
     display = NULL;
 	display_bitmap = NULL;
-    timer = NULL;
+    //timer = NULL;
     event_queue = NULL;
-	default_font = NULL;
-	arial_file = NULL;
+	//default_font = NULL;
+	//arial_file = NULL;
 	ancien_emplacement = NULL;
 	mouse_clicked_func_ptr = &Allegro::_undefined_;
 	mouse_moved_func_ptr = &Allegro::_undefined_;
@@ -45,22 +52,46 @@ Allegro::Allegro()
 	
 	context = NULL;
 
-    looping = true, redraw = false, redraw_paused = false;
+    redraw = false, redraw_paused = false;
+	
+	_start_loop();
+	
+	focus = true;
+	
+	#ifdef __ENABLE_GUI__
+	gui_ptr = (void*)(new GUI(this));
+	#endif
+	
+	instances.push_back(this);
 }
 
 Allegro::~Allegro()
 {
-	try{
-		al_fclose(arial_file);
-		
-	} catch(...){
-		std::cerr << "Erreur lors de la fermeture de arial_file;" << std::endl;
-		std::flush(std::cerr);
+	
+	if(loops == 0){
+		try{
+			al_fclose(arial_file);
+			
+		} catch(...){
+			std::cerr << "Erreur lors de la fermeture de arial_file;" << std::endl;
+			std::flush(std::cerr);
+		}
 	}
 	
     al_destroy_event_queue(event_queue);
     al_destroy_timer(timer);
     al_destroy_display(display);
+}
+
+void Allegro::_start_loop(){
+//	al_start_timer(timer);
+	looping = true;
+	loops++;
+}
+
+void Allegro::_stop_loop(){
+	looping = false;
+	loops--;
 }
 
 void Allegro::_exec_mouse_clicked_function(uint16_t ev){
@@ -352,13 +383,60 @@ int Allegro::init()
     {
         return -1;
     }
-	
-	#ifdef __ENABLE_GUI__
-	gui_ptr = (void*)(new GUI(this));
-	#endif
 
 	white = al_map_rgb(255, 255, 255);
 	black = al_map_rgb(0, 0, 0);
+	
+	al_install_keyboard();
+	al_install_mouse();
+    al_init_image_addon();
+	al_init_primitives_addon();
+	al_init_font_addon();
+	al_init_ttf_addon();
+	
+	
+	//default_font = al_load_ttf_font("arial.ttf", 25, 0);
+	
+
+#if (defined (LINUX) || defined (__linux__))
+	/* load font from memory */
+	#if defined (ALLEGRO_WRAPPER_DEV)
+		
+		extern uint8_t arial_data[]	asm("_binary_fonts_Arimo_Regular_ttf_start");
+		extern uint8_t arial_data_size[]	asm("_binary_fonts_Arimo_Regular_ttf_size");
+	
+	#else
+	
+		extern uint8_t arial_data[]	asm("_binary_allegro_fonts_Arimo_Regular_ttf_start");
+		extern uint8_t arial_data_size[]	asm("_binary_allegro_fonts_Arimo_Regular_ttf_size");
+	
+	#endif
+
+	size_t arial_size = (size_t)((void *)arial_data_size);
+
+	arial_file = al_open_memfile(arial_data, (int64_t)arial_size, "r");
+	default_font = al_load_ttf_font_f(arial_file, 0, 12, 0);
+
+	/* yep, the font file is embeded in the executable at link time :D */
+#endif
+#if (defined (_WIN32) || defined (_WIN64))
+	/*uint8_t* arial_data;
+	uint8_t* arial_data_size;
+	__asm mov _binary_allegro_arial_ttf_start, [ebx]arial_data
+	__asm mov _binary_allegro_arial_ttf_size, [ebx]arial_data_size*/
+
+	default_font = al_load_ttf_font("fonts/Arimo-Regular.ttf", 12, 0);
+
+#endif
+	
+	
+	if(!default_font){
+		std::cerr << "Warning ! Could not load default font !" << std::endl;
+		std::flush(std::cerr);
+		throw new std::logic_error("Could not load default font !");
+	} else {
+		//std::cout << "Succesfuly loaded arial.ttf" << std::endl;
+	}
 
     return 0;
 }
@@ -401,8 +479,15 @@ bool Allegro::isInFullscreen(){
 	return (al_get_display_flags(display) & ALLEGRO_FULLSCREEN_WINDOW);
 }
 
+void Allegro::clearScreen(){
+	 al_clear_to_color(white);
+}
+
 int Allegro::createWindow(float FPS, int width, int height)
 {
+	if(display != NULL)
+		return -5;
+		
 	//al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
 	al_set_new_display_flags(ALLEGRO_RESIZABLE | ALLEGRO_WINDOWED);
     display = al_create_display(width, height);
@@ -430,50 +515,9 @@ int Allegro::createWindow(float FPS, int width, int height)
         al_destroy_display(display);
         return -1;
     }
+	
 	al_init_user_event_source(&user_generated);
 	al_register_event_source(event_queue, &user_generated);
-
-    al_install_keyboard();
-	al_install_mouse();
-    al_init_image_addon();
-	al_init_primitives_addon();
-	al_init_font_addon();
-	al_init_ttf_addon();
-	
-	
-	//default_font = al_load_ttf_font("arial.ttf", 25, 0);
-	
-
-#if (defined (LINUX) || defined (__linux__))
-	/* load font from memory */
-	extern uint8_t arial_data[]	asm("_binary_allegro_fonts_Arimo_Regular_ttf_start");
-	extern uint8_t arial_data_size[]	asm("_binary_allegro_fonts_Arimo_Regular_ttf_size");
-
-	size_t arial_size = (size_t)((void *)arial_data_size);
-
-	arial_file = al_open_memfile(arial_data, (int64_t)arial_size, "r");
-	default_font = al_load_ttf_font_f(arial_file, 0, 12, 0);
-
-	/* yep, the font file is embeded in the executable at link time :D */
-#endif
-#if (defined (_WIN32) || defined (_WIN64))
-	/*uint8_t* arial_data;
-	uint8_t* arial_data_size;
-	__asm mov _binary_allegro_arial_ttf_start, [ebx]arial_data
-	__asm mov _binary_allegro_arial_ttf_size, [ebx]arial_data_size*/
-
-	default_font = al_load_ttf_font("fonts/Arimo-Regular.ttf", 12, 0);
-
-#endif
-	
-	
-	if(!default_font){
-		std::cerr << "Warning ! Could not load default font !" << std::endl;
-		std::flush(std::cerr);
-		throw new std::logic_error("Could not load default font !");
-	} else {
-		//std::cout << "Succesfuly loaded arial.ttf" << std::endl;
-	}
 
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_timer_event_source(timer));
@@ -490,20 +534,31 @@ int Allegro::createWindow(float FPS, int width, int height)
     return 0;
 }
 
-void Allegro::gameLoop()
-{
-    al_start_timer(timer);
-    while (looping)
-    {
-        ALLEGRO_EVENT ev;
-        al_wait_for_event(event_queue, &ev);
-		
-		if(ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE){
-			al_acknowledge_resize(display);
-			_exec_window_resized_function();
-			//WIDTH = getDisplayWidth();
-			//HEIGHT = getDisplayHeight();
-		}else if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN){
+void Allegro::_loop(){
+	if(display == NULL)
+		return;
+	
+	al_set_target_backbuffer(display);
+	if(!al_get_timer_started(timer))
+			al_start_timer(timer);
+	
+	ALLEGRO_EVENT ev;
+	al_wait_for_event(event_queue, &ev);
+	
+	if(ev.type == ALLEGRO_EVENT_DISPLAY_SWITCH_IN){
+		focus = true;
+	} else if(ev.type == ALLEGRO_EVENT_DISPLAY_SWITCH_OUT){
+		focus = false;
+	}
+	
+	if(ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE){
+		al_acknowledge_resize(display);
+		_exec_window_resized_function();
+		//WIDTH = getDisplayWidth();
+		//HEIGHT = getDisplayHeight();
+	}
+	if(focus){
+		if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN){
 			mouseBtns[ev.mouse.button] = true;
 			mouse.setBtn(ev.mouse.button);
 			
@@ -581,50 +636,63 @@ void Allegro::gameLoop()
 			#endif
 			//ev.keyboard.unichar;
 		}
+	}
+	
+	if(ev.type == ALLEGRO_EVENT_TIMER)
+	{
+		_exec_key_repeat_function();
 		
+		animate_func_ptr(this, m_FPS);
 		
-        if(ev.type == ALLEGRO_EVENT_TIMER)
-        {
-			_exec_key_repeat_function();
-			
-			animate_func_ptr(this, m_FPS);
-			
-			if(!redraw_paused)
-				redraw = true;
-			else
-				al_flip_display();
-        }
-        else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
-        {
-            looping = false;
-			exit(0);
-        }
+		if(!redraw_paused)
+			redraw = true;
+		else
+			al_flip_display();
+	}
+	else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+	{
+		_stop_loop();
+		
+		delete this;
+		return;
+	}
 
-        if (redraw && al_is_event_queue_empty(event_queue))
-        {
-            redraw = false;
-			
-			redraw_func_ptr(this, m_FPS);
-			
-			#ifdef __ENABLE_GUI__
-			
-			getGUI()->drawAllBtns();
-			
-			getGUI()->drawAllInputBoxes();
-			
-			getGUI()->drawLastMessage();
-			
-			/*ancien_emplacement = al_create_sub_bitmap(display_bitmap, mouse.getX(), mouse.getY(), mouse.getX()+32, mouse.getY()+32);
-			if(ancien_emplacement != 0 && old_x != -1){
-				al_draw_scaled_bitmap(ancien_emplacement, 0, 0, al_get_bitmap_width(ancien_emplacement), al_get_bitmap_height(ancien_emplacement), old_x, old_y, 30, 30, 0);
+	if (redraw && al_is_event_queue_empty(event_queue))
+	{
+		redraw = false;
+		
+		redraw_func_ptr(this, m_FPS);
+		
+		#ifdef __ENABLE_GUI__
+		
+		getGUI()->drawAllBtns();
+		
+		getGUI()->drawAllInputBoxes();
+		
+		getGUI()->drawLastMessage();
+		
+		/*ancien_emplacement = al_create_sub_bitmap(display_bitmap, mouse.getX(), mouse.getY(), mouse.getX()+32, mouse.getY()+32);
+		if(ancien_emplacement != 0 && old_x != -1){
+			al_draw_scaled_bitmap(ancien_emplacement, 0, 0, al_get_bitmap_width(ancien_emplacement), al_get_bitmap_height(ancien_emplacement), old_x, old_y, 30, 30, 0);
+		}
+		//ancien_emplacement = al_create_sub_bitmap(display_bitmap, mouse.getX(), mouse.getY(), mouse.getX()+32, mouse.getY()+32);*/
+		getGUI()->drawCursor(mouse.getX(), mouse.getY());
+		//old_x = mouse.getX();
+		//old_y = mouse.getY();
+		#endif
+
+		al_flip_display();
+	}
+}
+
+void Allegro::startLoop()
+{
+    while (loops > 0)
+    {
+        for(Allegro* instance : instances){
+			if(instance->looping){
+				instance->_loop();
 			}
-			//ancien_emplacement = al_create_sub_bitmap(display_bitmap, mouse.getX(), mouse.getY(), mouse.getX()+32, mouse.getY()+32);*/
-			getGUI()->drawCursor(mouse.getX(), mouse.getY());
-			//old_x = mouse.getX();
-			//old_y = mouse.getY();
-			#endif
-
-            al_flip_display();
-        }
+		}
     }
 }

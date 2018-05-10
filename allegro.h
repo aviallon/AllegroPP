@@ -41,12 +41,21 @@ typedef unsigned char uchar;
 class Allegro
 {
 private:
+
+/* statics */
+	static std::vector<Allegro*> instances;
+	static unsigned loops; // Stop loop when it reaches 0
+	static ALLEGRO_FILE *arial_file;
+	static ALLEGRO_FONT *default_font;
+
+/* end of statics */
+
     ALLEGRO_DISPLAY *display;
 	ALLEGRO_BITMAP *display_bitmap;
-    ALLEGRO_TIMER *timer;
+	ALLEGRO_TIMER *timer;
     ALLEGRO_EVENT_QUEUE *event_queue;
-	ALLEGRO_FONT *default_font;
-	ALLEGRO_FILE *arial_file;
+	
+	bool focus = true;
 	
 	ALLEGRO_BITMAP *ancien_emplacement;
 	
@@ -81,6 +90,10 @@ private:
 	
 	void _exec_window_resized_function();
 	
+	void _stop_loop();
+	void _start_loop();
+	void _loop();
+	
 	ALLEGRO_EVENT_SOURCE user_generated;
 	
 	
@@ -90,6 +103,9 @@ private:
 	std::vector<ALLEGRO_FONT*> fonts;
 
 public:
+	static ALLEGRO_COLOR white; //!< Defined to white color during init()
+	static ALLEGRO_COLOR black; //!< Defined to black color during init()
+
     Allegro();
     ~Allegro();
 
@@ -97,7 +113,8 @@ public:
 	 * @brief Inits allegro. Required before doing anything else.
 	 * @return Returns 0 if no errors are encountered.
 	 */
-    int init();
+    static int init();
+	
 	
 	/**
 	 * @brief Creates a window.
@@ -111,9 +128,9 @@ public:
     int createWindow(float FPS, int w, int h);
 	
 	/**
-	 * @brief Starts the event loop. Stops when users click on window close.
+	 * @brief Starts the global loop. Stops when all opened windows are closed.
 	 */
-    void gameLoop();
+    static void startLoop();
 	
 	/**
 	 * @brief Calls the given function when the mouse is clicked.
@@ -170,9 +187,6 @@ public:
 	static const uint16_t MOUSE_WHEELED = 1<<9;
 	static const uint16_t MOUSE_MOVED_DELTA = 1<<10;
 	static const uint16_t WINDOW_RESIZED = 1<<11;
-	
-	ALLEGRO_COLOR white; //!< Defined to white color during init()
-	ALLEGRO_COLOR black; //!< Defined to black color during init()
 	
 	/**
 	 * @brief Returns an allegro color struct by giving color as Red Green Blue.
@@ -297,6 +311,8 @@ public:
 	// Locks the buffer. Screen is only updated after it as been unlocked
 	void lockScreen();
 	void unlockScreen();
+	
+	void clearScreen();
 	
 	void setCursorVisibility(bool visible);
 	void setStickCursorToCenter(bool stick);
