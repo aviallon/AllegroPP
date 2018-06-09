@@ -2,6 +2,7 @@
 #include <string>
 #include <chrono>
 #include "allegro.h"
+#include "sprites.h"
 
 inline int between(double x, int min, int max){
 	return floor((x>max) ? max : ((x<min) ? min : x));

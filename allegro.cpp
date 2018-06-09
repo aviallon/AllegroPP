@@ -489,7 +489,7 @@ int Allegro::createWindow(float FPS, int width, int height)
 		return -5;
 		
 	//al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
-	al_set_new_display_flags(ALLEGRO_RESIZABLE | ALLEGRO_WINDOWED);
+	al_set_new_display_flags(/*ALLEGRO_RESIZABLE |*/ ALLEGRO_WINDOWED);
     display = al_create_display(width, height);
     if (!display)
     {
