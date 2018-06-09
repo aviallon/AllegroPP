@@ -670,7 +670,7 @@ void Allegro::_loop(){
 	{
 		_stop_loop();
 		
-		delete this;
+		//delete this;
 		return;
 	}
 
