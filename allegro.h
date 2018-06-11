@@ -16,6 +16,9 @@
 #include <cmath>
 #include <cctype>
 #include <vector>
+#include <mutex>
+#include <thread>
+#include <chrono>
 #include <algorithm>
 
 #define MAX(a, b) (((a > b))?(a):(b))
@@ -38,15 +41,19 @@ class InputBox;
 
 typedef unsigned char uchar;
 
+//std::this_thread::sleep_for(std::chrono)
+
 class Allegro
 {
 private:
 
 /* statics */
 	static std::vector<Allegro*> instances;
+	static std::vector<std::thread> allegro_threads;
 	static unsigned loops; // Stop loop when it reaches 0
 	static ALLEGRO_FILE *arial_file;
 	static ALLEGRO_FONT *default_font;
+	static bool loop_started;
 
 /* end of statics */
 
@@ -92,7 +99,8 @@ private:
 	
 	void _stop_loop();
 	void _start_loop();
-	void _loop();
+	void _loop_element();
+	static void _loop(Allegro* allegro);
 	
 	ALLEGRO_EVENT_SOURCE user_generated;
 	

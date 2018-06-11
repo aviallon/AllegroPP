@@ -1,5 +1,6 @@
 #include "allegro.h"
 //#include "avlib.h"
+//#include <thread>
 
 std::vector<Allegro*> Allegro::instances;
 unsigned Allegro::loops; // Stop loop when it reaches 0
@@ -7,6 +8,8 @@ ALLEGRO_COLOR Allegro::white;
 ALLEGRO_COLOR Allegro::black;
 ALLEGRO_FILE *Allegro::arial_file;
 ALLEGRO_FONT *Allegro::default_font;
+bool Allegro::loop_started = false;
+std::vector<std::thread> Allegro::allegro_threads;
 
 void Allegro::_undefined_(Allegro* master, void* context, uint16_t event, int x, int y){
 	// Do nothing
@@ -87,6 +90,7 @@ void Allegro::_start_loop(){
 //	al_start_timer(timer);
 	looping = true;
 	loops++;
+	allegro_threads.push_back(std::thread(_loop, this));
 }
 
 void Allegro::_stop_loop(){
@@ -534,7 +538,7 @@ int Allegro::createWindow(float FPS, int width, int height)
     return 0;
 }
 
-void Allegro::_loop(){
+void Allegro::_loop_element(){
 	if(display == NULL)
 		return;
 	
@@ -702,14 +706,39 @@ void Allegro::_loop(){
 	}
 }
 
+void Allegro::_loop(Allegro* allegro){
+	
+	while(!loop_started){
+		std::this_thread::sleep_for(std::chrono::microseconds(500));
+	}
+	
+	while(allegro->looping){
+		allegro->_loop_element();
+	}
+	
+}
+
 void Allegro::startLoop()
 {
-    while (loops > 0)
-    {
-        for(Allegro* instance : instances){
-			if(instance->looping){
-				instance->_loop();
-			}
-		}
-    }
+	loop_started = true;
+	
+	while(loops > 0){
+		std::this_thread::sleep_for(std::chrono::microseconds(1000));
+	}
+	
+	for(std::thread& allegro_thd : allegro_threads){
+		allegro_thd.join();
+	}
+//	for(Allegro* instance: instances){
+//		allegro_threads.push_back(std::thread(_loop, instance));
+//	}
+//	while(l)
+//    while (loops > 0)
+//    {
+//        for(Allegro* instance : instances){
+//			if(instance->looping){
+//				instance->_loop_element();
+//			}
+//		}
+//    }
 }
