@@ -8,12 +8,17 @@ inline int between(double x, int min, int max){
 	return floor((x>max) ? max : ((x<min) ? min : x));
 }
 
+inline float between(double x, float min, float max){
+	return (x>max) ? max : ((x<min) ? min : x);
+}
+
 class Color {
 public:
-	Color(int r, int g, int b){
+	Color(int r, int g, int b, float a = 1){
 		_r = between(r, 0, 255);
 		_g = between(g, 0, 255);
 		_b = between(b, 0, 255);
+		_a = between(a, 0, 255);
 	}
 	
 	Color(){
@@ -46,10 +51,14 @@ public:
 	}
 	
 	ALLEGRO_COLOR toAllegro(){
-		return al_map_rgb(_r, _g, _b);
+		if(_a != 1)
+			return al_map_rgba(_r, _g, _b, _a);
+		else
+			return al_map_rgb(_r, _g, _b);
 	}
 	
 	int _r, _g, _b;
+	float _a;
 	bool notColor = false;
 };
 
@@ -68,49 +77,22 @@ public:
 	long data;
 	std::string name;
 	
+	//bool use_sprites = false;
+	Sprite btn_sprite;
+	Sprite btn_sprite_clicked;
+	Sprite btn_sprite_hovered;
+	
 	void (*btn_clicked)(Allegro*, Button*);
 	
-	bool isInside(int x, int y){
-		if(this->x < x && this->x+width > x && this->y < y && this->y+height > y){
-			return true;
-		}
-		return false;
-	}
+	void setSprites(Sprite defaut, Sprite clicked, Sprite hovered);
 	
-	void click(int x, int y, uint16_t ev){
-		if(isInside(x, y) && (ev & Allegro::MOUSE_UP) && state == 1){
-			state = 2;
-			drawBtn();
-			btn_clicked(allegro_ptr, this);
-		} else if (isInside(x, y)){
-			state = 1;
-			drawBtn();
-		}
-	}
+	bool isInside(int x, int y);
 	
-	void hover(int x, int y){
-		if(!allegro_ptr->isMouseBtnDown(1)){
-			if(isInside(x, y)){
-				state = 2;
-				drawBtn();
-			} else {
-				state = 0;
-			}
-		}
-	}
+	void click(int x, int y, uint16_t ev);
 	
-	void drawBtn(){
-		ALLEGRO_COLOR color;
-		if(state == 1)
-			color = allegro_ptr->rgb(100, 100, 200);
-		else if(state == 0)
-			color = allegro_ptr->rgba(100, 100, 100, 0);
-		else if(state == 2){
-			color = allegro_ptr->rgb(100, 100, 150);
-		}
-		allegro_ptr->draw_rectangle(x, y, x+width, y+height, color, 1, true);
-		allegro_ptr->draw_text(x+width/2, y+height/2, name, allegro_ptr->rgb(0, 0, 0));
-	}
+	void hover(int x, int y);
+	
+	void drawBtn();
 };
 
 class Image{
@@ -120,10 +102,10 @@ public:
 	}
 	
 	Image(const char* filename, int x = 0, int y = 0, int width = 0, int height = 0){
-		image = al_load_bitmap(filename);
-		if(image != 0 && (width == 0 || height == 0)){
-			this->width =  al_get_bitmap_width(image);
-			this->height = al_get_bitmap_height(image);
+		sprite = SpriteMap(filename).getWholeSprite();
+		if(sprite && (width == 0 || height == 0)){
+			this->width = sprite.getWidth();
+			this->height = sprite.getHeight();
 		}else{
 			this->width = width;
 			this->height = height;
@@ -138,23 +120,23 @@ public:
 			x = this->x;
 			y = this->y;
 		}
-		if(image != 0){
-			allegro->draw_image(x, y, image);
+		if(sprite){
+			sprite.drawSprite(x, y);
 		}
 	}
 	
 	void drawScaledImage(Allegro* allegro, int x, int y, int w, int h){
-		if(image != 0)
-			allegro->draw_scaled_image(x, y, w, h, image);
+		if(sprite)
+			sprite.drawSprite(x, y, w, h);
 	}
 	
 	int x, y;
 	int width;
 	int height;
-	ALLEGRO_BITMAP* image;
+	Sprite sprite;
 };
 
-class Bitmap{
+class [[deprecated]] Bitmap{
 public:
 	Bitmap(bool ok = false){
 		isOk = ok;
@@ -166,17 +148,6 @@ public:
 		} else {
 			std::cerr << "Bitmap not correct" << std::endl;
 			throw(5);
-		}
-	}
-	
-	Image getImage(){
-		if(isOk){
-			ALLEGRO_BITMAP* bmp = al_load_bitmap_f(bitmap_memfile, ".bmp");
-			Image img;
-			img.image = bmp;
-			img.width = al_get_bitmap_width(bmp);
-			img.height = al_get_bitmap_height(bmp);
-			return img;
 		}
 	}
 	
@@ -402,7 +373,7 @@ public:
 			std::chrono::time_point<std::chrono::system_clock> mnt = std::chrono::system_clock::now();
 			uint_fast32_t tmp = mnt.time_since_epoch().count()/1000000;
 			//std::cout << tmp << std::endl;
-			if( tmp%1000 > 500 )
+			if( tmp%600 > 300 )
 				drawCaret();
 		}
 	}
@@ -414,26 +385,38 @@ public:
 		this->allegro = allegro;
 	}
 	
-	Button* newBtn(std::string name, int x, int y, int height, int width, void (*btn_clicked)(Allegro*, Button*)){
+	unsigned newBtn(std::string name, int x, int y, int height, int width, void (*btn_clicked)(Allegro*, Button*)){
 		buttons.push_back(Button(allegro, name, x, y, height, width, btn_clicked));
-		return &buttons[buttons.size()-1];
+		return buttons.size()-1;
 	}
 	
-	InputBox* newInputBox(std::string default_text, int x, int y, int height, int width, void (*input_validated)(Allegro*, InputBox*)){
+	unsigned newInputBox(std::string default_text, int x, int y, int height, int width, void (*input_validated)(Allegro*, InputBox*)){
 		InputBox inpt(allegro, default_text, x, y, height, width, input_validated);
 		inpt.GUI_keyboard_capture = &keyboardCapture;
 		input_boxes.push_back(inpt);
-		return &input_boxes[input_boxes.size()-1];
+		return input_boxes.size()-1;
 	}
 	
-	Image* newImage(const char* filename, int x, int y, int height = 0, int width = 0){
+	unsigned newImage(const char* filename, int x, int y, int height = 0, int width = 0){
 		images.push_back(Image(filename, x, y, width, height));
-		return &images[images.size()-1];
+		return images.size()-1;
 	}
 	
-	int newCursor(const char* filename, std::string name){
+	unsigned newCursor(const char* filename, std::string name){
 		cursors.push_back(Cursor(allegro, filename, name));
 		return cursors.size()-1;
+	}
+	
+	unsigned getBtnId(unsigned i){
+		return buttons.at(i).id;
+	}
+	
+	unsigned getInputBoxId(unsigned i){
+		return input_boxes.at(i).id;
+	}
+	
+	void setBtnSprites(unsigned i, Sprite defaut, Sprite clicked, Sprite hovered){
+		buttons.at(i).setSprites(defaut, clicked, hovered);
 	}
 	
 	void setCursor(int i){
