@@ -1,8 +1,11 @@
 #pragma once
 #include <string>
 #include <chrono>
+#include <memory>
 #include "allegro.h"
 #include "sprites.h"
+
+using std::shared_ptr;
 
 inline int between(double x, int min, int max){
 	return floor((x>max) ? max : ((x<min) ? min : x));
@@ -136,59 +139,49 @@ public:
 	Sprite sprite;
 };
 
-class [[deprecated]] Bitmap{
-public:
-	Bitmap(bool ok = false){
-		isOk = ok;
-	}
-	
-	ALLEGRO_BITMAP* getBitmap(){
-		if(isOk){
-			return al_load_bitmap_f(bitmap_memfile, ".bmp");
-		} else {
-			std::cerr << "Bitmap not correct" << std::endl;
-			throw(5);
-		}
-	}
-	
-	bool isOk;
-	ALLEGRO_FILE* bitmap_memfile;
-};
-
 class Cursor{
 public:
 	
-	Cursor(Allegro* allegro, const char* filename, std::string name){
-		cursor = new Image(filename);
+	Cursor(Allegro* allegro, const char* filename, std::string name, int w = 32){
+		cursor = Sprite(SpriteMap(filename).getWholeSprite());
+		this->w = w;
+		this->h = w*cursor.getHeight()/cursor.getWidth();
+		this->name = name;
+	}
+	
+	Cursor(Allegro* allegro, Sprite sprite, std::string name, int w = 32){
+		cursor = sprite;
+		this->w = w;
+		this->h = w*cursor.getHeight()/cursor.getWidth();
 		this->name = name;
 	}
 	
 	void eraseOldCursor(){
-		allegro->draw_rectangle(cursor->x, cursor->y, cursor->x+cursor->width, cursor->y+cursor->height, allegro->rgb(255, 255, 255), 1, true);
+		//allegro->draw_rectangle(this->x, this->y, this->x+w, this->y+h, allegro->rgb(255, 255, 255), 1, true);
+		
+		if(old_place)
+			old_place.drawSprite(this->x, this->y);
 	}
 	
 	void drawCursor(int x, int y){
-		allegro->draw_rectangle(cursor->x, cursor->y, cursor->x+cursor->width, cursor->y+cursor->height, allegro->rgb(255, 255, 255), 1, true);
-		//if(old_place.isOk){
-		//	std::cout << "Test" << std::endl;
-		//	old_place.getImage().drawImage(allegro, cursor->x, cursor->y);
-		//}
-		/*if(ancien_emplacement.image != 0){
-			//ancien_emplacement.drawImage(allegro, this->x, this->y);
-		}*/
-		cursor->x = x;
-		cursor->y = y;
-		//old_place = allegro->getSubBitmapFromDisplay(x, y, cursor->width, cursor->height);
-		//ancien_emplacement = allegro->getSubBitmapFromDisplay(x, y, cursor->width, cursor->height);
+		//allegro->draw_rectangle(this->x, this->y, this->x+w, this->y+h, allegro->rgb(255, 255, 255), 1, true);
 		
-		cursor->drawImage(allegro, x, y);
+		if(old_place)
+			old_place.drawSprite(this->x, this->y);
+			
+		this->x = x;
+		this->y = y;
+		//old_place = allegro->getSubBitmapFromDisplay(x, y, w, h);
+		
+		cursor.drawSprite(x, y, w, h);
 	}
 	
 	std::string name;
 	Allegro* allegro;
 	int x, y;
-	Bitmap old_place;
-	Image* cursor;
+	float w, h;
+	Sprite old_place;
+	Sprite cursor;
 };
 
 class Message{
@@ -402,8 +395,13 @@ public:
 		return images.size()-1;
 	}
 	
-	unsigned newCursor(const char* filename, std::string name){
-		cursors.push_back(Cursor(allegro, filename, name));
+	unsigned newCursor(const char* filename, std::string name, int w = 32){
+		cursors.push_back(Cursor(allegro, filename, name, w));
+		return cursors.size()-1;
+	}
+	
+	unsigned newCursor(Sprite sprite, std::string name, int w = 32){
+		cursors.push_back(Cursor(allegro, sprite, name, w));
 		return cursors.size()-1;
 	}
 	
@@ -420,8 +418,9 @@ public:
 	}
 	
 	void setCursor(int i){
-		if(cursor >= 0)
+		if(cursor >= 0){
 			cursors[cursor].eraseOldCursor();
+		}
 		cursor = i;
 	}
 	

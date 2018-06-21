@@ -15,6 +15,11 @@ public:
 	Sprite(){
 		
 	}
+	
+	Sprite(ALLEGRO_BITMAP* bmp){
+		sprite = shared_ptr<ALLEGRO_BITMAP>(bmp, al_destroy_bitmap);
+		isDefined = true;
+	}
 
 	Sprite(shared_ptr<ALLEGRO_BITMAP> sprt){
 		sprite = sprt;
@@ -22,11 +27,15 @@ public:
 	}
 	
 	void drawSprite(int x, int y, unsigned w = 0, unsigned h=0, bool alignCenter = false){
+		float sw = al_get_bitmap_width(sprite.get());
+		float sh = al_get_bitmap_height(sprite.get());
 		if(w + h == 0){
+			if(alignCenter){
+				x = x-sw/2;
+				y = y-sh/2;
+			}
 			al_draw_bitmap(sprite.get(), x, y, 0);
 		} else {
-			float sw = al_get_bitmap_width(sprite.get());
-			float sh = al_get_bitmap_height(sprite.get());
 			if(alignCenter){
 				x = x-w/2;
 				y = y-h/2;

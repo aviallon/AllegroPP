@@ -36,7 +36,8 @@ class Mouse;
 class Button;
 class GUI;
 class Image;
-class Bitmap;
+class Sprite;
+class SpriteMap;
 class InputBox;
 
 typedef unsigned char uchar;
@@ -133,7 +134,7 @@ public:
 	 * @param h Height of the window
 	 * @return Returns 0 if no errors are encountered.
 	 */
-    int createWindow(float FPS, int w, int h);
+    int createWindow(float FPS, int w, int h, int flags = ALLEGRO_WINDOWED);
 	
 	/**
 	 * @brief Starts the global loop. Stops when all opened windows are closed.
@@ -304,7 +305,7 @@ public:
 	void draw_image(int x, int y, ALLEGRO_BITMAP* image);
 	void draw_scaled_image(int x, int y, int w, int h, ALLEGRO_BITMAP* image);
 	
-	Bitmap getSubBitmapFromDisplay(int x, int y, int w, int h);
+	Sprite getSubBitmapFromDisplay(int x, int y, int w, int h);
 	
 	int getTextWidth(std::string text, ALLEGRO_FONT* font);
 	int getTextWidth(const char* text);

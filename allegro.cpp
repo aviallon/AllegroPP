@@ -299,34 +299,17 @@ void Allegro::draw_scaled_image(int x, int y, int w, int h, ALLEGRO_BITMAP* imag
 	al_draw_scaled_bitmap(image, 0, 0, al_get_bitmap_width(image), al_get_bitmap_height(image), x, y, w, h, 0);
 }
 
-Bitmap Allegro::getSubBitmapFromDisplay(int x, int y, int w, int h){
-	std::cout << "WARNING : getSubBitmapFromDisplay not working !!!" << std::endl;
+Sprite Allegro::getSubBitmapFromDisplay(int x, int y, int w, int h){
+	std::cerr << "WARNING : getSubBitmapFromDisplay not working !!!" << std::endl;
 	
-	int real_size = 0;
-	Bitmap bmp(true);
-	void* buffer;
+//	ALLEGRO_LOCKED_REGION* lock = al_lock_bitmap(display_bitmap, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY);
+	ALLEGRO_BITMAP* disp_clone = al_clone_bitmap(display_bitmap);
+
+	std::shared_ptr<ALLEGRO_BITMAP> screen(al_clone_bitmap(al_create_sub_bitmap(display_bitmap, x, y, w, h)), al_destroy_bitmap);
 	
-	ALLEGRO_BITMAP* image = al_create_sub_bitmap(display_bitmap, x, y, w, h);
-	int data_size = al_get_bitmap_width(image) * al_get_bitmap_height(image) * al_get_pixel_size(al_get_bitmap_format(image)) * 2;
-	buffer = calloc(data_size, 1);
-	if(!buffer)
-		return Bitmap(false);
+	//al_unlock_bitmap(display_bitmap);
 	
-	//ALLEGRO_LOCKED_REGION* lock = al_lock_bitmap(display_bitmap, ALLEGRO_PIXEL_FORMAT_ABGR_8888, ALLEGRO_LOCK_READONLY);
-	
-	bmp.bitmap_memfile = al_open_memfile(buffer, data_size, "rw");
-	if(!bmp.bitmap_memfile){
-		std::cerr << "Failed to open memfile!" << std::endl;
-	} else {
-		al_save_bitmap_f(bmp.bitmap_memfile, ".bmp", image);
-		real_size = al_ftell(bmp.bitmap_memfile);
-		if(real_size < 1){
-			std::cerr << "Real size too small!" << std::endl;
-			return Bitmap(false);
-		}
-	}
-	
-	return bmp;
+	return Sprite(screen);
 }
 
 int Allegro::getTextWidth(std::string text, ALLEGRO_FONT* font){
@@ -487,13 +470,13 @@ void Allegro::clearScreen(){
 	 al_clear_to_color(white);
 }
 
-int Allegro::createWindow(float FPS, int width, int height)
+int Allegro::createWindow(float FPS, int width, int height, int flags)
 {
 	if(display != NULL)
 		return -5;
 		
 	//al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
-	al_set_new_display_flags(/*ALLEGRO_RESIZABLE |*/ ALLEGRO_WINDOWED);
+	al_set_new_display_flags(/*ALLEGRO_RESIZABLE |*/ flags);
     display = al_create_display(width, height);
     if (!display)
     {
@@ -692,11 +675,6 @@ void Allegro::_loop_element(){
 		
 		getGUI()->drawLastMessage();
 		
-		/*ancien_emplacement = al_create_sub_bitmap(display_bitmap, mouse.getX(), mouse.getY(), mouse.getX()+32, mouse.getY()+32);
-		if(ancien_emplacement != 0 && old_x != -1){
-			al_draw_scaled_bitmap(ancien_emplacement, 0, 0, al_get_bitmap_width(ancien_emplacement), al_get_bitmap_height(ancien_emplacement), old_x, old_y, 30, 30, 0);
-		}
-		//ancien_emplacement = al_create_sub_bitmap(display_bitmap, mouse.getX(), mouse.getY(), mouse.getX()+32, mouse.getY()+32);*/
 		getGUI()->drawCursor(mouse.getX(), mouse.getY());
 		//old_x = mouse.getX();
 		//old_y = mouse.getY();
@@ -729,16 +707,4 @@ void Allegro::startLoop()
 	for(std::thread& allegro_thd : allegro_threads){
 		allegro_thd.join();
 	}
-//	for(Allegro* instance: instances){
-//		allegro_threads.push_back(std::thread(_loop, instance));
-//	}
-//	while(l)
-//    while (loops > 0)
-//    {
-//        for(Allegro* instance : instances){
-//			if(instance->looping){
-//				instance->_loop_element();
-//			}
-//		}
-//    }
 }
