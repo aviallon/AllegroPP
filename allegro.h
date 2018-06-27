@@ -19,6 +19,7 @@
 
 #define MAX(a, b) (((a > b))?(a):(b))
 #define MIN(a, b) (((a < b))?(a):(b))
+#define PI 3.14159265359
 
 #include <exception>
 #include <memory>
