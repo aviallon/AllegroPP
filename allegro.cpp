@@ -155,6 +155,17 @@ void Allegro::set_pixel(int x, int y, ALLEGRO_COLOR color){
 	al_put_pixel(x, y, color);
 }
 
+void Allegro::set_pixel_fast(int x, int y, ALLEGRO_COLOR color){
+//	char* data;
+//	
+//	data = display_bitmap->locked_region.data;
+//	data += y * display_bitmap->locked_region.pitch;
+//    data += x * al_get_pixel_size(display_bitmap->locked_region.format);
+//
+//	_AL_INLINE_PUT_PIXEL(display_bitmap->locked_region.format, data, color, false);
+// BROKEN
+}
+
 void Allegro::lockScreen(){
 	al_lock_bitmap(display_bitmap, al_get_bitmap_format(display_bitmap), ALLEGRO_LOCK_READWRITE);
 }

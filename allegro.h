@@ -209,6 +209,14 @@ public:
 	void set_pixel(int x, int y, ALLEGRO_COLOR color);
 	
 	/**
+	 * @brief WARNING : Dangerous. Sets a pixel to the specified color at the specified coordinates. Don't make any verification.
+	 * @param x Abscissa of the pixel
+	 * @param y Ordinate of the pixel
+	 * @param color Well, the pixel's color
+	 */
+	void set_pixel_fast(int x, int y, ALLEGRO_COLOR color);
+	
+	/**
 	 * @brief Draws a line between the two specified pixels.
 	 * @param x1 First pixel's abscissa
 	 * @param y1 First pixel's ordinate
