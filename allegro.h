@@ -55,6 +55,7 @@ private:
 	static ALLEGRO_FILE *arial_file;
 	static ALLEGRO_FONT *default_font;
 	static bool loop_started;
+	static std::mutex flip_display_mutex;
 
 /* end of statics */
 
@@ -302,73 +303,234 @@ public:
 	void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align = ALLEGRO_ALIGN_CENTER);
 	void draw_text(int x, int y, const char* text, ALLEGRO_COLOR color, int align = ALLEGRO_ALIGN_CENTER);
 	
+	/**
+	 * @brief Draws an allegro bitmap at the specified coordinates
+	 * @param x Abscissa
+	 * @param y Ordinate
+	 * @param image The bitmap in ALLEGRO format.
+	 */
 	void draw_image(int x, int y, ALLEGRO_BITMAP* image);
+	/**
+	 * @brief Draws a scaled allegro bitmap at the specified coordinates
+	 * @param x Abscissa
+	 * @param y Ordinate
+	 * @param w New width
+	 * @param h New height
+	 * @param image The bitmap in ALLEGRO format.
+	 */
 	void draw_scaled_image(int x, int y, int w, int h, ALLEGRO_BITMAP* image);
 	
+	/**
+	 * @brief WIP function. Doesn't work at all yet
+	 * @param x
+	 * @param y
+	 * @param w
+	 * @param h
+	 * @return 
+	 */
 	Sprite getSubBitmapFromDisplay(int x, int y, int w, int h);
 	
+	/**
+	 * @brief Get the actuall length of a string using the specified font
+	 * @param text The considered text
+	 * @param font The font in Allegro format
+	 * @return Return how much pixels long the displayed string would be on screen.
+	 */
 	int getTextWidth(std::string text, ALLEGRO_FONT* font);
+	/**
+	 * @brief Get the actuall length of a string with default font
+	 * @param text
+	 * @return Return how much pixels long the displayed string would be on screen.
+	 */
 	int getTextWidth(const char* text);
 	
+	/**
+	 * @brief Get the font's max height. Can be conbined with getTextWidth to know precisely what space a string would use on screen.
+	 * @param font The font in Allegro format.
+	 * @return Return the font height in pixels.
+	 */
 	int getFontHeight(ALLEGRO_FONT* font);
 	
+	/**
+	 * @brief Get the default font
+	 * @param fs If different from -1, load the default font and add it to fonts.
+	 * @return Return the font in ALLEGRO_FONT* format, useful for getTextWidth for example.
+	 */
 	ALLEGRO_FONT* getDefaultFont(int fs=-1);
 	
-	int showDialogMessage(char const *title, char const *heading, char const *text, char const *buttons, int flags);
-	const char* askFile(char const* initial_path, char const* title, char const* patterns, int mode);
+	/**
+	 * @brief Shows a little standardized display box.
+	 * @param title The title
+	 * @param heading
+	 * @param text The box message
+	 * @param buttons The buttons
+	 * @param flags Defaults to a yes/no behaviour
+	 * @return Return the number of the clicked button.
+	 */
+	int showDialogMessage(char const *title, char const *heading, char const *text, char const *buttons, int flags = ALLEGRO_MESSAGEBOX_YES_NO);
+	/**
+	 * @brief Displays a system file chooser
+	 * @param initial_path Default path
+	 * @param title
+	 * @param patterns File types authorized for choosing
+	 * @param mode Blackmagick
+	 * @return Returns the path of the choosen file.
+	 */
+	const char* askFile(char const* initial_path, char const* title, char const* patterns, int mode = 0);
 	
-	// Locks the buffer. Screen is only updated after it as been unlocked
+	/**
+	 * @brief Locks the screen buffer. Screen is only updated after it as been unlocked
+	 */
 	void lockScreen();
+	/**
+	 * @brief Unlocks the screen buffer.
+	 */
 	void unlockScreen();
 	
+	/**
+	 * @brief Draw a filled, white rectangle over the whole window.
+	 */
 	void clearScreen();
 	
+	/**
+	 * @brief Show/Hide cursor. Useful for games.
+	 * @param visible If set to true, show the cursor. If set to false, hide it.
+	 */
 	void setCursorVisibility(bool visible);
+	/**
+	 * @brief Teleport cursor to the window's center each frame. Usefull for games.
+	 * @param stick
+	 */
 	void setStickCursorToCenter(bool stick);
+	/**
+	 * @brief Set system's cursor.
+	 * @param id
+	 */
 	void setSystemCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR id);
 	
+	/**
+	 * @brief Pauses window redrawing : screen won't be updated each loop, but events will still be recorded.
+	 */
 	void stopRedraw();
+	
+	/**
+	 * @brief Resume screen redrawing. See stopRedraw()
+	 */
 	void resumeRedraw();
 	
+	/**
+	 * @brief Copy buffer to actual display. Can't be used by two threads at once (protected by a mutex).
+	 */
 	void flipDisplay();
 	
+	/**
+	 * @brief Get time in milliseconds since epoch.
+	 * @return 
+	 */
 	long int getTime();
 	
+	/**
+	 * @brief Returns mouse X coordinate from top-left of window
+	 * @return 
+	 */
 	int getMouseX();
+	/**
+	 * @brief Returns mouse Y coordinate from top-left of window
+	 * @return 
+	 */
 	int getMouseY();
 	
+	/**
+	 * @brief Check if a key is currently pressed.
+	 * @param keycode The key's keycode in ALLEGRO format. See their documentation for more details.
+	 * @return 
+	 */
 	bool isKeyDown(int keycode);
+	/**
+	 * @brief Check mouse button pressed state.
+	 * @param button Mouse button id from 1 to 3, 1 is left, 2 is right and 3 is middle.
+	 * @return 
+	 */
 	bool isMouseBtnDown(int button);
 	
+	/**
+	 * @brief Pass a multipurpose pointer to Allegro's instance, accessible from all Allegro functions.
+	 * @param cont A void* pointer.
+	 */
 	void setContext(void* cont);
+	/**
+	 * @brief Get the multipurpose pointer.
+	 */
 	void* getContext();
 	
+	/**
+	 * @brief Explicit. Get the windows's width.
+	 * @return 
+	 */
 	int getDisplayWidth();
+	/**
+	 * @brief Get the window's height.
+	 * @return 
+	 */
 	int getDisplayHeight();
 	
+	/**
+	 * @brief Activate/deactivate fullscreen based on the parameter you give.
+	 * @param activate If true, go into fullscreen mode.
+	 */
 	void toggleFullscreen(bool activate);
+	/**
+	 * @brief Returns true if the window is currently in fullscreen mode
+	 * @return 
+	 */
 	bool isInFullscreen();
 	
+	/**
+	 * @brief Saves (a part of) the window's display as a .bmp file.
+	 * @param filename
+	 * @param x 
+	 * @param y
+	 * @param x2
+	 * @param y2
+	 * @return Returns true if everything went well.
+	 */
 	bool screenshot(const char* filename, int x = 0, int y = 0, int x2 = -1, int y2 = -1);
 	
+	/**
+	 * @brief Quit current Allegro's instance.
+	 */
 	void quit();
 	
-	
+	/**
+	 * @brief Fake functions used as placeholders if an event/action handler is not defined
+	 * @param master
+	 * @param context
+	 * @param event
+	 * @param x
+	 * @param y
+	 */
 	static void _undefined_(Allegro* master, void* context, uint16_t event, int x, int y);
 	static void _undefined_(Allegro* master, void* context, uint16_t event, uint8_t keycode);
 	static void _undefined_(Allegro* master, float FPS);
 	
-	// This is a static RGB function.
-	static struct ALLEGRO_COLOR rgbS(int r, int g, int b){
-		return al_map_rgb(r, g, b);
-	}
-	
+	/**
+	 * @brief Convert an ALLEGRO_COLOR into a string.
+	 * @param color
+	 * @return 
+	 */
+	[[deprecated("Replaced by a complete Color class")]]
 	static std::string colorToStr(ALLEGRO_COLOR color){
 		std::stringstream ss;
 		ss << color.r*255 << "," << color.g*255 << "," << color.b*255 << "," << color.a*255;
 		return ss.str();
 	}
 	
+	/**
+	 * @brief Convert a comma separated string into an ALLEGRO_COLOR
+	 * @param str
+	 * @return 
+	 */
+	[[deprecated("Replaced by a complete Color class")]]
 	static ALLEGRO_COLOR strToColor(std::string str){
 		std::replace(str.begin(), str.end(), ',', ' ');
 		std::stringstream ss;
@@ -376,11 +538,15 @@ public:
 		ss << str;
 		int r, g, b, a;
 		ss >> r >> g >> b >> a;
-		return al_map_rgb(r, g, b);
+		return al_map_rgba(r, g, b, a);
 	}
 	
 	void* gui_ptr;
 	
+	/**
+	 * @brief Simply get the GUI pointer
+	 * @return 
+	 */
 	GUI* getGUI(){
 		return (GUI*)gui_ptr;
 	}

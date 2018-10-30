@@ -10,6 +10,7 @@ ALLEGRO_FILE *Allegro::arial_file;
 ALLEGRO_FONT *Allegro::default_font;
 bool Allegro::loop_started = false;
 std::vector<std::thread> Allegro::allegro_threads;
+std::mutex Allegro::flip_display_mutex;
 
 void Allegro::_undefined_(Allegro* master, void* context, uint16_t event, int x, int y){
 	// Do nothing
@@ -81,6 +82,7 @@ Allegro::~Allegro()
 		}
 	}
 	
+	al_destroy_bitmap(display_bitmap);
     al_destroy_event_queue(event_queue);
     al_destroy_timer(timer);
     al_destroy_display(display);
@@ -225,6 +227,7 @@ void Allegro::quit(){
 	ALLEGRO_EVENT ev;
 	ev.type = ALLEGRO_EVENT_DISPLAY_CLOSE;
 	al_emit_user_event(&user_generated, &ev, NULL);
+	delete this;
 }
 
 // LIGNE
@@ -303,11 +306,12 @@ Sprite Allegro::getSubBitmapFromDisplay(int x, int y, int w, int h){
 	std::cerr << "WARNING : getSubBitmapFromDisplay not working !!!" << std::endl;
 	
 //	ALLEGRO_LOCKED_REGION* lock = al_lock_bitmap(display_bitmap, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY);
-	ALLEGRO_BITMAP* disp_clone = al_clone_bitmap(display_bitmap);
+	//ALLEGRO_BITMAP* disp_clone = al_clone_bitmap(display_bitmap);
 
 	std::shared_ptr<ALLEGRO_BITMAP> screen(al_clone_bitmap(al_create_sub_bitmap(display_bitmap, x, y, w, h)), al_destroy_bitmap);
 	
 	//al_unlock_bitmap(display_bitmap);
+	//al_destroy_bitmap(disp_clone);
 	
 	return Sprite(screen);
 }
@@ -341,11 +345,11 @@ void Allegro::resumeRedraw(){
 	redraw_paused = false;
 }
 
-int Allegro::showDialogMessage(char const* title, char const* heading, char const* text, char const* buttons, int flags = ALLEGRO_MESSAGEBOX_YES_NO){
+int Allegro::showDialogMessage(char const* title, char const* heading, char const* text, char const* buttons, int flags){
 	return al_show_native_message_box(display, title, heading, text, buttons, flags);
 }
 
-const char* Allegro::askFile(char const* initial_path, char const* title, char const* patterns, int mode = 0){
+const char* Allegro::askFile(char const* initial_path, char const* title, char const* patterns, int mode){
 	ALLEGRO_FILECHOOSER* filechooser = al_create_native_file_dialog(initial_path, title, patterns, mode);
 	if(al_show_native_file_dialog(display, filechooser)){
 		return al_get_native_file_dialog_path(filechooser, 0);
@@ -360,7 +364,9 @@ bool Allegro::screenshot(const char* filename, int x, int y, int x2, int y2){
 		return al_save_bitmap(filename, display_bitmap);
 	} else {
 		ALLEGRO_BITMAP* bmp = al_create_sub_bitmap(display_bitmap, x, y, x2-x, y2-y);
-		return al_save_bitmap(filename, bmp);
+		bool res = al_save_bitmap(filename, bmp);
+		al_destroy_bitmap(bmp);
+		return res;
 	}
 }
 
@@ -429,7 +435,10 @@ int Allegro::init()
 }
 
 void Allegro::flipDisplay(){
+	flip_display_mutex.lock();
+	al_set_target_backbuffer(display);
 	al_flip_display();
+	flip_display_mutex.unlock();
 }
 
 int Allegro::getDisplayWidth(){
@@ -525,7 +534,10 @@ void Allegro::_loop_element(){
 	if(display == NULL)
 		return;
 	
+	//ALLEGRO_BITMAP display_buffer = al_clone_bitmap(display_bitmap);
+	//auto lock = al_lock_bitmap(display_bitmap);
 	al_set_target_backbuffer(display);
+	
 	if(!al_get_timer_started(timer))
 			al_start_timer(timer);
 	
@@ -650,8 +662,9 @@ void Allegro::_loop_element(){
 		
 		if(!redraw_paused)
 			redraw = true;
-		else
+		else{
 			al_flip_display();
+		}
 	}
 	else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
 	{
@@ -664,6 +677,9 @@ void Allegro::_loop_element(){
 	if (redraw && al_is_event_queue_empty(event_queue))
 	{
 		redraw = false;
+		
+		ALLEGRO_BITMAP* display_bmp_clone = al_clone_bitmap(display_bitmap);
+		al_set_target_bitmap(display_bmp_clone);
 		
 		redraw_func_ptr(this, m_FPS);
 		
@@ -679,8 +695,15 @@ void Allegro::_loop_element(){
 		//old_x = mouse.getX();
 		//old_y = mouse.getY();
 		#endif
-
+		
+		//lockScreen();
+		flip_display_mutex.lock();
+		al_set_target_bitmap(display_bitmap);
+		al_draw_bitmap(display_bmp_clone, 0, 0, 0);
 		al_flip_display();
+		flip_display_mutex.unlock();
+		al_destroy_bitmap(display_bmp_clone);
+		//unlockScreen();
 	}
 }
 
