@@ -71,21 +71,17 @@ Allegro::Allegro()
 
 Allegro::~Allegro()
 {
-	
 	if(loops == 0){
-		try{
-			al_fclose(arial_file);
-			
-		} catch(...){
-			std::cerr << "Erreur lors de la fermeture de arial_file;" << std::endl;
-			std::flush(std::cerr);
-		}
+//		try{
+//			al_fclose(arial_file);
+//			
+//		} catch(...){
+//			std::cerr << "Erreur lors de la fermeture de arial_file;" << std::endl;
+//			std::flush(std::cerr);
+//		}
+		
+		//exit(0);
 	}
-	
-	al_destroy_bitmap(display_bitmap);
-    al_destroy_event_queue(event_queue);
-    al_destroy_timer(timer);
-    al_destroy_display(display);
 }
 
 void Allegro::_start_loop(){
@@ -93,11 +89,14 @@ void Allegro::_start_loop(){
 	looping = true;
 	loops++;
 	allegro_threads.push_back(std::thread(_loop, this));
+	//allegro_threads[allegro_threads.size()-1].detach();
+	thread_id = allegro_threads.size()-1;
 }
 
 void Allegro::_stop_loop(){
 	looping = false;
 	loops--;
+	quit();
 }
 
 void Allegro::_exec_mouse_clicked_function(uint16_t ev){
@@ -224,10 +223,15 @@ void Allegro::setSystemCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR id){
 }
 
 void Allegro::quit(){
-	ALLEGRO_EVENT ev;
-	ev.type = ALLEGRO_EVENT_DISPLAY_CLOSE;
-	al_emit_user_event(&user_generated, &ev, NULL);
-	delete this;
+	//ALLEGRO_EVENT ev;
+	//ev.type = ALLEGRO_EVENT_DISPLAY_CLOSE;
+	//al_emit_user_event(&user_generated, &ev, NULL);
+	
+	printf("Quit...\n");
+	//al_destroy_bitmap(display_bitmap);
+    al_destroy_event_queue(event_queue);
+    al_destroy_timer(timer);
+    al_destroy_display(display);
 }
 
 // LIGNE

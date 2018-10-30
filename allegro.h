@@ -2,6 +2,7 @@
 #ifndef ALLEGRO_H_
 #define ALLEGRO_H_
 
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -109,6 +110,7 @@ private:
 	
 	float m_FPS;
 	bool cursorSticked = false;
+	unsigned thread_id;
 	
 	std::vector<ALLEGRO_FONT*> fonts;
 
