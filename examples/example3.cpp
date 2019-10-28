@@ -7,30 +7,18 @@
 #include <iterator>
 #include <algorithm>
 #include <cstdio>
-//#using "arial.ttf"
-#include <experimental/filesystem>
-//#include <filesystem>
+#include <filesystem>
 
+using namespace AllegroPP;
 using namespace std;
-namespace fs = std::experimental::filesystem::v1;
+namespace fs = std::filesystem;
 
 using cint = const unsigned int;
 
 
-/*string getexepath()
-{
-	//using namespace std::experimental::filesystem::v1;
-	using namespace fs;
-	//current_path();
-	string path = current_path().generic_string();
-	return path;
-	//return "";
-}*/
-
-
 class Tile {
 public:
-	Tile(int x, int y, ALLEGRO_COLOR color, int size = 5, int shape = CIRCLE) {
+	Tile(int x, int y, Color color, int size = 5, int shape = CIRCLE) {
 		this->x = x;
 		this->y = y;
 		this->size = size; 
@@ -42,7 +30,7 @@ public:
 		
 	}
 	
-	bool isBlank(){
+	bool isBlank() const{
 		if(this->size == 0){
 			return true;
 		}
@@ -51,10 +39,10 @@ public:
 	
 	void drawTile(Allegro* allegro){
 		if (shape == CIRCLE) {
-			allegro->draw_ellipse(x, y, x + size, y + size, color, 1, true);
+			allegro->draw_ellipse(x, y, x + size, y + size, color.toAllegro(), 1, true);
 		}
 		else {
-			allegro->draw_rectangle(x, y, x + size, y + size, color, 1, true);
+			allegro->draw_rectangle(x, y, x + size, y + size, color.toAllegro(), 1, true);
 		}
 	}
 	
@@ -65,27 +53,19 @@ public:
 	}
 	
 	friend ostream& operator<<(ostream& os, const Tile& t){
-		os << t.x << " " << t.y << " " << t.size << " " << t.shape << " " << Allegro::colorToStr(t.color);
+      if(t.isBlank())
+         return os;
+		os << t.x << " " << t.y << " " << t.size << " " << t.shape << " " << t.color.toHex();
 		return os;
 	}
 	
 	friend istream& operator>>(istream& is, Tile& t){
-		string colorStr;
-		is >> t.x >> t.y >> t.size >> t.shape >> colorStr;
-		t.color = Allegro::strToColor(colorStr);
-		//ALLEGRO_COLOR color = Allegro::rgbS(0, 0, 0);
-		//t.color = color;
-		//cout << "INPUT : " << t << endl;
+		string colorHexStr;
+		is >> t.x >> t.y >> t.size >> t.shape >> colorHexStr;
+      const int colorHex = stoul(colorHexStr, 0, 16);
+		t.color = Color(colorHex);
 		return is;
 	}
-	
-//	const Tile operator=(Tile& tile){
-//		this->x = tile.x;
-//		this->y = tile.y;
-//		this->size = tile.size;
-//		this->color = tile.color;
-//		this->shape = tile.shape;
-//	}
 
 	static cint SQUARE = 1 << 0;
 	static cint CIRCLE = 1 << 1;
@@ -93,7 +73,7 @@ public:
 	int x, y;
 	int size;
 	int shape;
-	ALLEGRO_COLOR color;
+	Color color;
 };
 
 class World {
@@ -102,11 +82,11 @@ public:
 
 	}
 
-	void newTile(int x, int y, ALLEGRO_COLOR color) {
+	void newTile(int x, int y, Color color) {
 		world.push_back(Tile(x, y, color));
 	}
 
-	void newTile(int x, int y, int size, ALLEGRO_COLOR color, int shape) {
+	void newTile(int x, int y, int size, Color color, int shape) {
 		world.push_back(Tile(x, y, color, size, shape));
 	}
 	
@@ -151,7 +131,7 @@ public:
 int paintSize = 5;
 int shape = Tile::CIRCLE;
 bool mouseDown = false;
-ALLEGRO_COLOR tileColor;
+Color tileColor;
 int menuSize = 50;
 
 void redraw(Allegro* allegro, float FPS) {
@@ -171,7 +151,7 @@ void redraw(Allegro* allegro, float FPS) {
 	Tile demo(allegro->getDisplayWidth()-paintSize-5, 3, tileColor, paintSize, shape);
 	demo.drawTile(allegro);
 	
-	allegro->getGUI()->drawAllImages();
+	//allegro->getGUI()->drawAllImages();
 }
 
 void click(Allegro* allegro, void* cont, uint16_t ev, int x, int y) {
@@ -230,27 +210,25 @@ void saveTheWorld(Allegro* allegro, Button* btn){
 
 void loadTheWorld(World* world, const char* filename){
 	try {
-		//cout << "Tried to open the world" << endl;
 		int counter = 0;
 		ifstream open_file(filename);
 		world->world = vector<Tile>(10000);
 		string line;
 		getline(open_file, line);
 		while(getline(open_file, line)){
-			//cout << counter << " : " << line << endl;
 			if(line.compare("") == 0)
 				continue;
 			stringstream lstr;
 			lstr << line;
-			lstr >> world->world[counter];
+         Tile temp;
+         lstr >> temp;
+         if(!temp.isBlank())
+            world->world.at(counter) = temp;
 			counter++;
 		}
 		open_file.close();
-		//*world = vector<Tile>(istreambuf_iterator<Tile>(open_file), istreambuf_iterator<Tile>());
-		//istream_iterator<Tile> input_iterator(open_file);
-		//std::copy(world->world.begin(), world->world.end(), input_iterator);
 	} catch (exception e){
-		//if(e == std::runtime_error);
+		//if(e == std::runtime_error)
 		cerr << e.what() << endl;
 	}
 }
@@ -261,27 +239,26 @@ void loadTheWorldBtn(Allegro* allegro, Button* btn){
 	loadTheWorld(world, filename);
 }
 
-Button* savebtn;
+unsigned savebtn_id;
 
 void key(Allegro* allegro, void* cont, uint16_t ev, uint8_t keycode) {
+   Button* savebtn = allegro->getGUI()->getBtn(savebtn_id);
 	switch (keycode) {
-	case ALLEGRO_KEY_S:
-		shape = Tile::SQUARE;
-		break;
-	case ALLEGRO_KEY_R:
-		shape = Tile::CIRCLE;
-	case ALLEGRO_KEY_LSHIFT:
-		//cout << "Test" << endl;
-		if(ev & Allegro::KEY_DOWN){
-			//cout << "Test2" << endl;
-			savebtn->name = "Ouvrir";
-			savebtn->btn_clicked = &loadTheWorldBtn;
-		} else {
-			//cout << "Test2 bis" << endl;
-			savebtn->name = "Sauvegarder";
-			savebtn->btn_clicked = &saveTheWorld;
-		}
-	}
+      case ALLEGRO_KEY_S:
+         shape = Tile::SQUARE;
+         break;
+      case ALLEGRO_KEY_R:
+         shape = Tile::CIRCLE;
+         break;
+      case ALLEGRO_KEY_LSHIFT:
+         if(ev & Allegro::KEY_DOWN){
+            savebtn->name = "Ouvrir";
+            savebtn->btn_clicked = &loadTheWorldBtn;
+         } else {
+            savebtn->name = "Sauvegarder";
+            savebtn->btn_clicked = &saveTheWorld;
+         }
+   }
 }
 
 void exitBtn(Allegro* allegro, Button* btn){
@@ -292,13 +269,13 @@ void exitBtn(Allegro* allegro, Button* btn){
 void changeColorBtn(Allegro* allegro, Button* btn){
 	if(btn->name.compare("Bleu") == 0){
 		btn->name = "Rouge";
-		tileColor = allegro->rgb(0, 0, 255);
+		tileColor = Color(0, 0, 255);
 	} else if(btn->name.compare("Rouge") == 0){
 		btn->name = "Noir";
-		tileColor = allegro->rgb(255, 0, 0);
+		tileColor = Color(255, 0, 0);
 	} else {
 		btn->name = "Bleu";
-		tileColor = allegro->rgb(0, 0, 0);
+		tileColor = Color(0, 0, 0);
 	}
 }
 
@@ -322,11 +299,12 @@ bool getArg(int argc, const char** args, const char* arg){
 }
 
 int main(int argc, const char** args) {
+   Allegro::init();
+   
 	Allegro* allegro = new Allegro();
 	World* world = new World();
-
-	allegro->init();
-	tileColor = allegro->rgb(0, 0, 0);
+   
+	tileColor = Color(0, 0, 0);
 	allegro->createWindow(60, 500, 500);
 	
 	allegro->setContext((void *)world);
@@ -336,24 +314,21 @@ int main(int argc, const char** args) {
 	allegro->bindKeyDown(&key);
 	allegro->bindKeyUp(&key);
 	
-	//allegro->showDialogMessage("Test", "Pomme", "Un fruit", "Ok", ALLEGRO_MESSAGEBOX_QUESTION);
-	//cout << allegro->askFile("./", "Fichier", "", ALLEGRO_FILECHOOSER_FILE_MUST_EXIST) << endl;
-	
 	allegro->getGUI()->newBtn("Exit", 3, 3, 40, 70, &exitBtn);
 	
 	allegro->getGUI()->newBtn("Bleu", 70+20, 3, 40, 80, &changeColorBtn);
 	allegro->getGUI()->newBtn("Carré", 70+20+80+20, 3, 40, 60, &changeShape);
-	savebtn = allegro->getGUI()->newBtn("Sauvegarder", 70+20+80+20+60+20, 3, 40, 80, &saveTheWorld);
-	//cout << savebtn->id << endl;
-	allegro->getGUI()->newImage("./linux.png", 50, 50, 0, 0);
+	savebtn_id = allegro->getGUI()->newBtn("Sauvegarder", 70+20+80+20+60+20, 3, 40, 80, &saveTheWorld);
+	//allegro->getGUI()->newImage("./linux.png", 50, 50, 0, 0);
 	
 	if(argc > 1){
+      cout << "Loading world " << args[argc-1] << " !" << endl;
 		loadTheWorld(world, args[argc-1]);
 	}
 	
 	allegro->setRedrawFunction(&redraw);
 
-	allegro->gameLoop();
+	Allegro::startLoop();
 
 	return 0;
 }

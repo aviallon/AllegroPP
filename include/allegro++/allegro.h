@@ -28,9 +28,18 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/file.h>
 //#include <allegro5/primitives.h>
+#if __cplusplus >= 201703L
+   #include <filesystem>
+#else
+   #include <experimental/filesystem>
+   namespace std {
+      namespace filesystem = std::experimental::filesystem::v1;
+   }
+#endif
 
 #include <allegro++/math.h>
 #include <allegro++/mouse.h>
+#include <allegro++/color.h>
 #include <allegro++/primitives.h>
 #include <allegro++/sprites.h>
 #include <allegro++/gui.h>

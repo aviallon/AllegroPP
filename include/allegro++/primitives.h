@@ -111,7 +111,7 @@ namespace AllegroPP {
        * @param h Height of the window
        * @return Returns 0 if no errors are encountered.
        */
-       int createWindow(float FPS, int w, int h, int flags = ALLEGRO_WINDOWED);
+       int createWindow(float FPS, int w, int h, int flags = ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE);
       
       /**
        * @brief Starts the global loop. Stops when all opened windows are closed.

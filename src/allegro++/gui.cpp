@@ -2,56 +2,6 @@
 
 namespace AllegroPP {
 
-   inline int between(double x, int min, int max){
-      return floor((x>max) ? max : ((x<min) ? min : x));
-   }
-
-   inline float between(double x, float min, float max){
-      return (x>max) ? max : ((x<min) ? min : x);
-   }
-
-   Color::Color(int r, int g, int b, float a){
-      _r = between(r, 0, 255);
-      _g = between(g, 0, 255);
-      _b = between(b, 0, 255);
-      _a = between(a, 0, 255);
-   }
-
-   Color::Color(){
-      Color(0, 0, 0);
-   }
-
-   Color::Color(bool notColor){
-      Color(0, 0, 0);
-      this->notColor = notColor;
-   }
-
-   Color Color::operator*(double k){
-      return Color(this->_r*k, this->_g*k, this->_b*k);
-   }
-
-   Color Color::operator/(double k){
-      return Color(this->_r/k, this->_g/k, this->_b/k);
-   }
-
-   Color Color::operator+(const Color& c){
-      return Color(this->_r+c._r, this->_g+c._g, this->_b+c._b);
-   }
-
-   Color Color::mix(const Color& c){
-      return Color(between(this->_r, 0, c._r), between(this->_g, 0, c._g), between(this->_b, 0, c._b));
-   }
-
-   Color Color::blend(const Color& c){
-      return Color((this->_r + c._r)/2, (this->_g + c._g)/2, (this->_b + c._b)/2);
-   }
-
-   ALLEGRO_COLOR Color::toAllegro(){
-      if(_a != 1)
-         return al_map_rgba(_r, _g, _b, _a);
-      else
-         return al_map_rgb(_r, _g, _b);
-   }
 
    Button::Button(Allegro* allegro, std::string name, int x, int y, int height, int width, void (*btn_clicked)(Allegro*, Button*)){
       this->name = name;
@@ -401,8 +351,12 @@ namespace AllegroPP {
    }
 
    unsigned GUI::newImage(const char* filename, int x, int y, int height, int width){
-      images.push_back(Image(filename, x, y, width, height));
-      return images.size()-1;
+      if(std::filesystem::exists(std::filesystem::path(filename))){
+         images.push_back(Image(filename, x, y, width, height));
+         return images.size()-1;
+      } else {
+         throw new std::logic_error("Image does not exist !");
+      }
    }
 
    unsigned GUI::newCursor(const char* filename, std::string name, int w ){
@@ -413,6 +367,10 @@ namespace AllegroPP {
    unsigned GUI::newCursor(Sprite sprite, std::string name, int w ){
       cursors.push_back(Cursor(allegro, sprite, name, w));
       return cursors.size()-1;
+   }
+   
+   Button* GUI::getBtn(unsigned i){
+      return &buttons.at(i);
    }
 
    unsigned GUI::getBtnId(unsigned i){
@@ -459,17 +417,17 @@ namespace AllegroPP {
       }
    }
 
-//   void GUI::drawImage(int i){
-//      //images[i].drawImage(allegro, images[i].x, images[i].y);
-//      //std::cout << images[i].x << ", " << images[i].y << std::endl;
-//      images[i].drawScaledImage(allegro, images[i].x, images[i].y, images[i].width, images[i].height);
-//   }
-//
-//   void GUI::drawAllImages(){ // not active by default
-//      for(unsigned i = 0; i<images.size(); i++){
-//         drawImage(i);
-//      }
-//   }
+   void GUI::drawImage(int i){
+      //images[i].drawImage(allegro, images[i].x, images[i].y);
+      //std::cout << images[i].x << ", " << images[i].y << std::endl;
+      images[i].drawScaledImage(allegro, images[i].x, images[i].y, images[i].width, images[i].height);
+   }
+
+   void GUI::drawAllImages(){ // not active by default
+      for(unsigned i = 0; i<images.size(); i++){
+         drawImage(i);
+      }
+   }
 
    void GUI::mouseClickHandle(uint16_t ev, int x, int y){
       if(ev & Allegro::MOUSE_L_CLICKED){

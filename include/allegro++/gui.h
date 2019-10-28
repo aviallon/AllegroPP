@@ -2,6 +2,7 @@
 
 #include <allegro++/allegro.h>
 #include <functional>
+#include <filesystem>
 
 namespace AllegroPP {
    
@@ -9,35 +10,6 @@ namespace AllegroPP {
    class Sprite;
 
    using std::shared_ptr;
-
-   inline int between(double x, int min, int max);
-
-   inline float between(double x, float min, float max);
-
-   class Color {
-   public:
-      Color(int r, int g, int b, float a = 1);
-      
-      Color();
-      
-      Color(bool notColor);
-      
-      Color operator*(double k);
-      
-      Color operator/(double k);
-      
-      Color operator+(const Color& c);
-      
-      Color mix(const Color& c);
-      
-      Color blend(const Color& c);
-      
-      ALLEGRO_COLOR toAllegro();
-      
-      int _r, _g, _b;
-      float _a;
-      bool notColor = false;
-   };
 
    class Button {
    private:
@@ -174,9 +146,15 @@ namespace AllegroPP {
       
       unsigned newImage(const char* filename, int x, int y, int height = 0, int width = 0);
       
+      void drawImage(int i);
+      
+      void drawAllImages();
+      
       unsigned newCursor(const char* filename, std::string name, int w = 32);
       
       unsigned newCursor(Sprite sprite, std::string name, int w = 32);
+      
+      Button* getBtn(unsigned i);
       
       unsigned getBtnId(unsigned i);
       
