@@ -11,19 +11,19 @@ If you want a comparison, this wrapper works _a lot_ like Tkinter in Python :
 you instantiate an `Allegro` object and everything uses it.
 
 ```c++
-#include "allegro++/allegro.h"
+#include <allegro++/allegro.h>
 
 int main(){
-      Allegro::init(); // Required before doing anything else
-	  Allegro window = Allegro();
+   Allegro::init(); // Required before doing anything else
+   Allegro window = Allegro();
 
-	  window.createWindow(30, 640, 480); // Create a window with a width of 640 and a height of 480, refreshing at 30 fps.
-	
-	  window.draw_text(640/2, 480/2, "Hello, world!", allegro->rgb(0, 0, 0)); // Draw "Hello, world!" in the middle of the screen (in black).
-  
-	  Allegro::startLoop(); // starts the loop
-	  
-	  return 0;
+   window.createWindow(30, 640, 480); // Create a window with a width of 640 and a height of 480, refreshing at 30 fps.
+
+   window.draw_text(640/2, 480/2, "Hello, world!", allegro->rgb(0, 0, 0)); // Draw "Hello, world!" in the middle of the screen (in black).
+
+   Allegro::startLoop();
+
+   return 0;
 }
 ```
 
