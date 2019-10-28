@@ -1,14 +1,40 @@
 # Allegro++
 
+## How to build
+
+```bash
+$ git clone https://github.com/aviallon/AllegroPP.git
+$ cd AllegroPP
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make -j$(nproc)
+$ sudo make install
+```
+
 ## How to use
 
-Just add the files in an "allegro" folder in your project
-You'll also have to add these compiler options (gcc) :
-`-lallegro -lallegro_image -lallegro_primitives -lallegro_memfile -lallegro_ttf -lallegro_font -Wl,--format=binary -Wl,allegro/arial.ttf -Wl,--format=default`.
-The first part is just here to link against allegro libs, and the second part (with `-Wl`) is here in order to _include_ arial.ttf file _into_ the final executable. The advantage is to avoid having to share a font file with your project as a separate file.
+You first need C++14 at least, because the filesystem TS is needed. Of course, C++17 is even better.
 
-If you want a comparison, this wrapper works _a lot_ like Tkinter in Python :
-you instantiate an `Allegro` object and everything uses it.
+Simply include `<allegro++/allegro.h>`, and everything will automatically get included
+
+You also need to link against these libraries :
+```
+allegro++
+allegro
+allegro_image
+allegro_primitives
+allegro_memfile
+allegro_ttf
+allegro_dialog
+allegro_color
+allegro_font
+armadillo
+stdc++fs
+```
+The last one is needed if you are using GCC 8 and below. For Clang, it's `c++fs`.
+
+It works a little bit like Tkinter, for Python users.
 
 ```c++
 #include <allegro++/allegro.h>
@@ -34,4 +60,4 @@ int main(){
 }
 ```
 
-I'll give more detailed examples in a dedicated folder (see example0 for multiwindow example)
+I'll give more detailed examples in a dedicated folder (see example0 for a complex multi-window example, with heavy animation)
