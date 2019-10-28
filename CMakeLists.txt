@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(LIBNAME "allegro++")
-set(LIBVERSION 0.1.0)
+set(LIBVERSION 1.0.0)
 
 project(${LIBNAME} VERSION ${LIBVERSION} DESCRIPTION "allegro but for C++")
 
