@@ -4,7 +4,13 @@ project(examples DESCRIPTION "allegro++ examples")
 
 add_executable(example0 example0.cpp)
 
+add_executable(example1 example1.cpp)
+
 include_directories(example0 PUBLIC
+   ${CMAKE_SOURCE_DIR}/include/
+)
+
+include_directories(example1 PUBLIC
    ${CMAKE_SOURCE_DIR}/include/
 )
 
@@ -13,6 +19,17 @@ find_library(ALLEGROPP
    HINTS ${CMAKE_BUILD_DIR})
 
 target_link_libraries(example0 PUBLIC
+   allegro++
+   allegro
+   allegro_primitives
+   allegro_memfile
+   allegro_ttf
+   allegro_image
+   allegro_dialog
+   allegro_font
+   allegro_color)
+   
+target_link_libraries(example1 PUBLIC
    allegro++
    allegro
    allegro_primitives
