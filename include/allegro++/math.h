@@ -13,8 +13,9 @@ namespace AllegroPP {
    }
    
    class Vec2D {
-   public:
+   private:
       arma::vec2 vec;
+   public:
    
       Vec2D(double x = 0.0, double y = 0.0);
       Vec2D(arma::vec2 v);
@@ -22,6 +23,9 @@ namespace AllegroPP {
       Vec2D operator+(const Vec2D &v2);
       Vec2D operator-(const Vec2D &v2);
       Vec2D operator/(double k);
+      
+      friend Vec2D operator*(const Vec2D &v, double k);
+      friend Vec2D operator*(double k, const Vec2D &v);
       
       /**
        * @brief Computes the dot product between two vecs
@@ -31,7 +35,5 @@ namespace AllegroPP {
       
       friend std::ostream& operator<<(std::ostream& os, const Vec2D &v);
    };
-   
-   Vec2D operator*(const Vec2D &v, double k);
-   Vec2D operator*(double k, const Vec2D &v);
+
 }

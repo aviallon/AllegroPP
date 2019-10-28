@@ -745,7 +745,7 @@ namespace AllegroPP {
       {
          timer_fired = false;
          
-         if(frame_skipped < 10) {
+         if(frame_skipped < FRAME_SKIPPED_THRESHOLD) {
             animate_func_ptr(this, m_FPS);
          } else {
             flush_event_queue = true;
@@ -764,12 +764,13 @@ namespace AllegroPP {
          frame_skipped++;
       }
 
-      if (redraw && (al_is_event_queue_empty(event_queue) || frame_skipped >= 10))
+      if (redraw && (al_is_event_queue_empty(event_queue) || frame_skipped >= FRAME_SKIPPED_THRESHOLD))
       {
          redraw = false;
          
+         ALLEGRO_BITMAP* display_bmp_clone;
          if(looping && display_bitmap != nullptr) {
-            ALLEGRO_BITMAP* display_bmp_clone = al_clone_bitmap(display_bitmap);
+            display_bmp_clone = al_clone_bitmap(display_bitmap);
          } else {
             return;
          }
@@ -800,7 +801,7 @@ namespace AllegroPP {
          al_destroy_bitmap(display_bmp_clone);
          
          flush_event_queue = false;
-         frame_skipped = (frame_skipped>0) ? frame_skipped - 1 : 0;
+         frame_skipped = (frame_skipped > 0) ? frame_skipped - 1 : 0;
       }
    }
 

@@ -39,7 +39,7 @@
 
 #include <armadillo>
 
-/**
+/*
    ARMADILLO LIB CITES :
 
    Conrad Sanderson and Ryan Curtin.
@@ -59,6 +59,8 @@ namespace AllegroPP {
 
 #define MAX(a, b) (((a > b))?(a):(b))
 #define MIN(a, b) (((a < b))?(a):(b))
+
+#define FRAME_SKIPPED_THRESHOLD 5
 
 #include <allegro++/math.h>
 #include <allegro++/mouse.h>
