@@ -12,11 +12,14 @@ namespace AllegroPP {
       _r = Math::clamp((hex & 0xFF0000)/0x010000, 0, 0xFF);
       _g = Math::clamp((hex & 0x00FF00)/0x000100, 0, 0xFF);
       _b = Math::clamp((hex & 0x0000FF)/0x000001, 0, 0xFF);
-      _a = Math::clamp((float)(hex & 0xFF000000)/0xFF000000, 0.0f, 1.0f);
+      _a = 1.0f - Math::clamp((float)(hex & 0xFF000000)/0xFF000000, 0.0f, 1.0f);
    }
-
-   Color::Color(){
-      Color(0, 0, 0);
+   
+   Color::Color(ALLEGRO_COLOR color){
+      _r = (int)(color.r * 255);
+      _g = (int)(color.g * 255);
+      _b = (int)(color.b * 255);
+      _a = color.a;
    }
 
    Color::Color(bool notColor){
@@ -42,6 +45,11 @@ namespace AllegroPP {
 
    Color Color::blend(const Color& c){
       return Color((this->_r + c._r)/2, (this->_g + c._g)/2, (this->_b + c._b)/2);
+   }
+   
+   std::ostream& operator<<(std::ostream& os, const Color& c){
+      os << "Color(" << c._r << "," << c._g << "," << c._b << "," << c._a << ")";
+      return os;
    }
    
    std::string Color::toHex() const{

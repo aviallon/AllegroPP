@@ -52,6 +52,14 @@ namespace AllegroPP {
    void Mouse::setBtn(int btn){
       this->btn = btn;
    }
+   
+   void Mouse::updateMouseState(){
+      al_get_mouse_state(state);
+   }
+   
+   bool Mouse::hasMouseFocusOnDisplay(ALLEGRO_DISPLAY* display){
+      return state->display == display;
+   }
 
    struct ALLEGRO_MOUSE_STATE* Mouse::getStatePtr(){
       return state;

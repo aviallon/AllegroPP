@@ -11,4 +11,27 @@ namespace AllegroPP {
 
       float clamp(double x, float min, float max);
    }
+   
+   class Vec2D {
+   public:
+      arma::vec2 vec;
+   
+      Vec2D(double x = 0.0, double y = 0.0);
+      Vec2D(arma::vec2 v);
+      
+      Vec2D operator+(const Vec2D &v2);
+      Vec2D operator-(const Vec2D &v2);
+      Vec2D operator/(double k);
+      
+      /**
+       * @brief Computes the dot product between two vecs
+       * @param Vec2D
+       */
+      double operator*(const Vec2D &v2);
+      
+      friend std::ostream& operator<<(std::ostream& os, const Vec2D &v);
+   };
+   
+   Vec2D operator*(const Vec2D &v, double k);
+   Vec2D operator*(double k, const Vec2D &v);
 }

@@ -44,6 +44,10 @@ namespace AllegroPP {
       
       void hover(int x, int y);
       
+      void setState(short s);
+      
+      short getState();
+      
       void drawBtn();
       
       static void _undefined_(Allegro* allegro, Button* btn);

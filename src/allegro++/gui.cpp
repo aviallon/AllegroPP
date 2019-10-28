@@ -3,13 +3,15 @@
 namespace AllegroPP {
 
 
-   Button::Button(Allegro* allegro, std::string name, int x, int y, int height, int width, void (*btn_clicked)(Allegro*, Button*)){
+   Button::Button(Allegro* allegro, std::string name, int x, int y, int height, int width, void (*btn_clicked)(Allegro*, Button*) = nullptr){
       this->name = name;
       this->x = x;
       this->y = y;
       this->height = height;
       this->width = width;
       this->id = id_increment;
+      if(btn_clicked == nullptr)
+         btn_clicked = &Button::_undefined_;
       this->btn_clicked = btn_clicked;
       this->allegro_ptr = allegro;
       id_increment++;
@@ -52,7 +54,6 @@ namespace AllegroPP {
       if(!allegro_ptr->isMouseBtnDown(1)){
          if(isInside(x, y)){
             state = 2;
-            drawBtn();
          } else {
             state = 0;
          }
@@ -62,11 +63,9 @@ namespace AllegroPP {
    void Button::click(int x, int y, uint16_t ev){
       if(isInside(x, y) && (ev & Allegro::MOUSE_UP) && state == 1){
          state = 2;
-         drawBtn();
          btn_clicked(allegro_ptr, this);
       } else if (isInside(x, y)){
          state = 1;
-         drawBtn();
       }
    }
 
@@ -85,6 +84,14 @@ namespace AllegroPP {
    
    void Button::_undefined_(Allegro* allegro, Button* btn){
       return;
+   }
+   
+   void Button::setState(short s){
+      this->state = Math::clamp(s, 0, 3);
+   }
+   
+   short Button::getState(){
+      return state;
    }
 
    Image::Image(){
@@ -105,7 +112,6 @@ namespace AllegroPP {
    }
 
    void Image::drawImage(Allegro* allegro, int x, int y){
-      //std::cout << "I've been called" << std::endl;
       if(x == -1 && y == -1){
          x = this->x;
          y = this->y;
@@ -198,7 +204,6 @@ namespace AllegroPP {
          if(GUI_keyboard_capture != NULL){
             (*GUI_keyboard_capture) = 0;
          }
-         //allegro_ptr->setSystemCursor(ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
          drawInputBox();
       } else {
          state = 0;

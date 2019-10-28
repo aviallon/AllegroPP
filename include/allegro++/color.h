@@ -1,6 +1,7 @@
 #pragma once
 
 #include <allegro++/allegro.h>
+#include <iostream>
 
 namespace AllegroPP{
 
@@ -8,9 +9,9 @@ namespace AllegroPP{
    public:
       Color(int r, int g, int b, float a = 1.0f);
       
-      Color(int hex);
+      Color(int hex = 0);
       
-      Color();
+      Color(ALLEGRO_COLOR color);
       
       Color(bool notColor);
       
@@ -23,6 +24,8 @@ namespace AllegroPP{
       Color mix(const Color& c);
       
       Color blend(const Color& c);
+      
+      friend std::ostream& operator<<(std::ostream& os, const Color& c);
       
       std::string toHex() const;
       

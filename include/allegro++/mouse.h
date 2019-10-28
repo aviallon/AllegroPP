@@ -10,16 +10,24 @@ namespace AllegroPP {
    public:
       Mouse();
       ~Mouse();
+      
       int getX();
       int getY();
+      
       int getDZ();
       void setDZ(int dz);
       int getDX();
       int getDY();
       void setDX(int dx);
       void setDY(int dy);
+      
       int getBtn();
       void setBtn(int btn);
+      
+      bool hasMouseFocusOnDisplay(ALLEGRO_DISPLAY* display);
+      
+      void updateMouseState();
+      
       struct ALLEGRO_MOUSE_STATE* getStatePtr();
       
    private:

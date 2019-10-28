@@ -19,6 +19,7 @@ link_libraries(
    allegro_dialog
    allegro_font
    allegro_color
+   armadillo
    stdc++fs)
    
 include_directories(

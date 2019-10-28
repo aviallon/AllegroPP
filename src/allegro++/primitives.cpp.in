@@ -11,6 +11,7 @@ namespace AllegroPP {
    ALLEGRO_FONT *Allegro::default_font;
    bool Allegro::loop_started = false;
    std::vector<std::thread> Allegro::allegro_threads;
+   std::vector<std::thread> Allegro::event_threads;
    std::mutex Allegro::flip_display_mutex;
    std::timed_mutex Allegro::draw_text_mutex;
 
@@ -62,6 +63,12 @@ namespace AllegroPP {
 
       redraw = false, redraw_paused = false;
       
+      frame_skipped = 0;
+      
+      effective_frametime = 0;
+      
+      last_frame = clock::now();
+      
       _start_loop();
       
       focus = true;
@@ -95,6 +102,7 @@ namespace AllegroPP {
       looping = true;
       loops++;
       allegro_threads.push_back(std::thread(_loop, this));
+      event_threads.push_back(std::thread(_event_loop, this));
       //allegro_threads[allegro_threads.size()-1].detach();
       thread_id = allegro_threads.size()-1;
    }
@@ -102,7 +110,7 @@ namespace AllegroPP {
    void Allegro::_stop_loop(){
       looping = false;
       loops--;
-      quit();
+      _quit();
    }
 
    void Allegro::_exec_mouse_clicked_function(uint16_t ev){
@@ -140,6 +148,10 @@ namespace AllegroPP {
    void Allegro::_exec_window_resized_function(){
       window_resized_func_ptr(this, context, WINDOW_RESIZED, getDisplayWidth(), getDisplayHeight());
    }
+   
+   void Allegro::_exec_window_closed_function(){
+      window_closed_func_ptr(this, context);
+   }
 
    void Allegro::bindMouseClick(void (*fptr)(Allegro*, void*, uint16_t, int, int)){
       mouse_clicked_func_ptr = fptr;
@@ -159,6 +171,10 @@ namespace AllegroPP {
 
    void Allegro::bindWindowResized( void(*fptr)(Allegro*, void*, uint16_t, int, int) ){
       window_resized_func_ptr = fptr;
+   }
+   
+   void Allegro::bindWindowClosed( void(*fptr)(Allegro*, void*) ){
+      window_closed_func_ptr = fptr;
    }
 
    bool Allegro::isKeyDown(int keycode){
@@ -229,15 +245,28 @@ namespace AllegroPP {
    }
 
    void Allegro::quit(){
-      //ALLEGRO_EVENT ev;
-      //ev.type = ALLEGRO_EVENT_DISPLAY_CLOSE;
-      //al_emit_user_event(&user_generated, &ev, NULL);
+      ALLEGRO_EVENT ev;
+      ev.type = ALLEGRO_EVENT_DISPLAY_CLOSE;
+      al_emit_user_event(&user_generated, &ev, NULL);
+   }
+      
+   void Allegro::_quit(){
       
       printf("Quit...\n");
       //al_destroy_bitmap(display_bitmap);
-       al_destroy_event_queue(event_queue);
-       al_destroy_timer(timer);
-       al_destroy_display(display);
+      bool looping = false;
+      unsigned counter = 0;
+      while(event_loop_working && counter < 100){
+         std::this_thread::sleep_for(std::chrono::microseconds(500));
+         counter++;
+         //std::cout << "Waiting to quit..." << std::endl;
+      }
+      event_loop_working = true;
+      al_destroy_event_queue(event_queue);
+      al_destroy_timer(timer);
+      flip_display_mutex.lock();
+      al_destroy_display(display);
+      flip_display_mutex.unlock();
    }
 
    // LIGNE
@@ -399,15 +428,12 @@ namespace AllegroPP {
       
       al_install_keyboard();
       al_install_mouse();
-       al_init_image_addon();
+      al_init_image_addon();
       al_init_primitives_addon();
       al_init_font_addon();
       al_init_ttf_addon();
       
-      
-      //default_font = al_load_ttf_font("arial.ttf", 25, 0);
-      
-
+   // Disabled memory font because it caused too much bugs.
    #if (defined (LINUX) || defined (__linux__)) && 0
       /* load font from memory */
       #if defined (ALLEGRO_WRAPPER_DEV)
@@ -495,6 +521,10 @@ namespace AllegroPP {
       al_clear_to_color(white);
    }
    
+   double Allegro::getFrametime(){
+      return effective_frametime * 1e3;
+   }
+   
    GUI* Allegro::getGUI(){
       if(gui_ptr != nullptr)
          return (GUI*)gui_ptr;
@@ -538,9 +568,9 @@ namespace AllegroPP {
       al_init_user_event_source(&user_generated);
       al_register_event_source(event_queue, &user_generated);
 
-       al_register_event_source(event_queue, al_get_display_event_source(display));
-       al_register_event_source(event_queue, al_get_timer_event_source(timer));
-       al_register_event_source(event_queue, al_get_keyboard_event_source());
+      al_register_event_source(event_queue, al_get_display_event_source(display));
+      al_register_event_source(event_queue, al_get_timer_event_source(timer));
+      al_register_event_source(event_queue, al_get_keyboard_event_source());
       al_register_event_source(event_queue, al_get_mouse_event_source());
 
       al_clear_to_color(al_map_rgb(255, 255, 255));
@@ -548,29 +578,28 @@ namespace AllegroPP {
       
       m_FPS = FPS;
       
-      //std::cout << toString(KEY_UP) << std::endl;
-      
        return 0;
    }
-
-   void Allegro::_loop_element(){
-      if(display == NULL)
+   
+   void Allegro::_event_loop_element(){
+      if(display == nullptr || looping == false)
          return;
-      
-      //ALLEGRO_BITMAP display_buffer = al_clone_bitmap(display_bitmap);
-      //auto lock = al_lock_bitmap(display_bitmap);
-      al_set_target_backbuffer(display);
-      
+         
       if(!al_get_timer_started(timer))
             al_start_timer(timer);
       
       ALLEGRO_EVENT ev;
-      al_wait_for_event(event_queue, &ev);
+      //al_wait_for_event(event_queue, &ev);
+      al_wait_for_event_timed(event_queue, &ev, 0.2);
       
       if(ev.type == ALLEGRO_EVENT_DISPLAY_SWITCH_IN){
          focus = true;
       } else if(ev.type == ALLEGRO_EVENT_DISPLAY_SWITCH_OUT){
          focus = false;
+         
+         for(unsigned i = 0; i<getGUI()->buttons.size(); i++){
+            getGUI()->getBtn(i)->setState(0);
+         }
       }
       
       if(ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE){
@@ -578,12 +607,12 @@ namespace AllegroPP {
          _exec_window_resized_function();
       }
       if(ev.type == ALLEGRO_EVENT_MOUSE_AXES || ev.type == ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY) { 
-         al_get_mouse_state(mouse->getStatePtr());
+         mouse->updateMouseState();
          mouse->setDZ(ev.mouse.dz);
          mouse->setDX(ev.mouse.dx);
          mouse->setDY(ev.mouse.dy);
          
-         if(mouse->getStatePtr()->display == display){
+         if(mouse->hasMouseFocusOnDisplay(display)){
          
             if(ev.mouse.dz != 0){
                _exec_mouse_moved_function(MOUSE_WHEELED);
@@ -591,7 +620,6 @@ namespace AllegroPP {
             _exec_mouse_moved_function(MOUSE_MOVED);
             
             #ifdef __ENABLE_GUI__
-            getGUI()->drawCursor(mouse->getX(), mouse->getY());
             
             getGUI()->mouseHoveringHandle(MOUSE_MOVED, mouse->getX(), mouse->getY());
             #endif
@@ -602,8 +630,18 @@ namespace AllegroPP {
             al_set_mouse_xy(display, al_get_display_height(display)/2, al_get_display_width(display)/2);
          
       }
+      
+      if(ev.type == ALLEGRO_EVENT_MOUSE_LEAVE_DISPLAY){
+         if(mouse->hasMouseFocusOnDisplay(display)){
+            // Loose focus on all buttons inside a window when mouse leaves it
+            for(unsigned i = 0; i<getGUI()->buttons.size(); i++){
+               getGUI()->getBtn(i)->setState(0);
+            }
+         }
+      }
+      
       if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN){
-         al_get_mouse_state(mouse->getStatePtr()); // Needed to avoid visual bugs with GUI
+         mouse->updateMouseState();
          
          mouseBtns[ev.mouse.button] = true;
          mouse->setBtn(ev.mouse.button);
@@ -616,15 +654,18 @@ namespace AllegroPP {
             else
                btnEv = MOUSE_R_CLICKED;
                
+            
             getGUI()->mouseClickHandle(btnEv | MOUSE_DOWN, mouse->getX(), mouse->getY());
             getGUI()->mouseHoveringHandle(MOUSE_MOVED, mouse->getX(), mouse->getY());
             #endif
             
+            flip_display_mutex.try_lock();
             _exec_mouse_clicked_function(MOUSE_DOWN);
+            flip_display_mutex.unlock();
             
          }
       }else if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-         al_get_mouse_state(mouse->getStatePtr()); // Needed to avoid visual bugs with GUI
+         mouse->updateMouseState();
          
          mouseBtns[ev.mouse.button] = false;
          mouse->setBtn(ev.mouse.button);
@@ -641,7 +682,9 @@ namespace AllegroPP {
             getGUI()->mouseHoveringHandle(MOUSE_MOVED, mouse->getX(), mouse->getY());
             #endif
             
+            flip_display_mutex.try_lock();
             _exec_mouse_clicked_function(MOUSE_UP);
+            flip_display_mutex.unlock();
          }
       }
       if(focus){
@@ -673,15 +716,42 @@ namespace AllegroPP {
             #ifdef __ENABLE_GUI__
             getGUI()->keyHandle(KEY_CHAR, ev.keyboard.keycode, ev.keyboard.unichar);
             #endif
-            //ev.keyboard.unichar;
          }
       }
       
-      if(ev.type == ALLEGRO_EVENT_TIMER)
+      if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
       {
-         _exec_key_repeat_function();
+         _exec_window_closed_function();
+         _stop_loop();
          
-         animate_func_ptr(this, m_FPS);
+         return;
+      }
+      
+      if(ev.type == ALLEGRO_EVENT_TIMER){
+         timer_fired = true;
+         
+         _exec_key_repeat_function();
+      }
+      
+   }
+
+   void Allegro::_loop_element(){
+      if(display == nullptr || looping == false)
+         return;
+      
+      al_set_target_backbuffer(display);
+      
+      if(timer_fired)
+      {
+         timer_fired = false;
+         
+         if(frame_skipped < 10) {
+            animate_func_ptr(this, m_FPS);
+         } else {
+            flush_event_queue = true;
+            al_stop_timer(timer);
+            std::cout << "We skipped an animation !" << std::endl;
+         }
          
          if(!redraw_paused)
             redraw = true;
@@ -689,19 +759,20 @@ namespace AllegroPP {
             al_flip_display();
          }
       }
-      else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
-      {
-         _stop_loop();
-         
-         //delete this;
-         return;
+      
+      if(redraw && (!al_is_event_queue_empty(event_queue))){
+         frame_skipped++;
       }
 
-      if (redraw && al_is_event_queue_empty(event_queue))
+      if (redraw && (al_is_event_queue_empty(event_queue) || frame_skipped >= 10))
       {
          redraw = false;
          
-         ALLEGRO_BITMAP* display_bmp_clone = al_clone_bitmap(display_bitmap);
+         if(looping && display_bitmap != nullptr) {
+            ALLEGRO_BITMAP* display_bmp_clone = al_clone_bitmap(display_bitmap);
+         } else {
+            return;
+         }
          al_set_target_bitmap(display_bmp_clone);
          
          redraw_func_ptr(this, m_FPS);
@@ -715,18 +786,21 @@ namespace AllegroPP {
          getGUI()->drawLastMessage();
          
          getGUI()->drawCursor(mouse->getX(), mouse->getY());
-         //old_x = mouse->getX();
-         //old_y = mouse->getY();
+         
          #endif
          
-         //lockScreen();
-         flip_display_mutex.lock();
-         al_set_target_bitmap(display_bitmap);
-         al_draw_bitmap(display_bmp_clone, 0, 0, 0);
-         al_flip_display();
-         flip_display_mutex.unlock();
+         if(flip_display_mutex.try_lock()){
+            if(looping && display_bitmap != nullptr) {
+               al_set_target_bitmap(display_bitmap);
+               al_draw_bitmap(display_bmp_clone, 0, 0, 0);
+               al_flip_display();
+            }
+            flip_display_mutex.unlock();
+         }
          al_destroy_bitmap(display_bmp_clone);
-         //unlockScreen();
+         
+         flush_event_queue = false;
+         frame_skipped = (frame_skipped>0) ? frame_skipped - 1 : 0;
       }
    }
 
@@ -737,9 +811,30 @@ namespace AllegroPP {
       }
       
       while(allegro->looping){
-         allegro->_loop_element();
+         if(!allegro->event_loop_working){
+            allegro->_loop_element();
+            duration dt = clock::now() - allegro->last_frame;
+            allegro->effective_frametime = dt.count();
+            allegro->last_frame = clock::now();
+         }
+         std::this_thread::sleep_for(std::chrono::microseconds(10));
       }
       
+   }
+   
+   void Allegro::_event_loop(Allegro* allegro){
+      while(!loop_started){
+         std::this_thread::sleep_for(std::chrono::microseconds(500));
+      }
+      
+      while(allegro->looping){
+         if(!allegro->event_loop_working){
+            allegro->event_loop_working = true;
+            allegro->_event_loop_element();
+            allegro->event_loop_working = false;
+         }
+         std::this_thread::sleep_for(std::chrono::microseconds(100));
+      }
    }
 
    void Allegro::startLoop()
@@ -750,9 +845,14 @@ namespace AllegroPP {
          std::this_thread::sleep_for(std::chrono::microseconds(1000));
       }
       
+      for(std::thread& event_thd : event_threads){
+         event_thd.join();
+      }
+      
       for(std::thread& allegro_thd : allegro_threads){
          allegro_thd.join();
       }
+      
    }
    
 }

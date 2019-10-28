@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.9)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(LIBNAME "allegro++")
 set(LIBVERSION 0.1.0)
 
@@ -64,7 +67,9 @@ find_library(ALLEGRO_LIBS NAMES
    allegro_image
    allegro_memfile
    allegro_primitives
-   allegro_ttf)
+   allegro_ttf
+   armadillo
+   stdc++fs)
 
 target_link_libraries(${LIBNAME} allegro)
 

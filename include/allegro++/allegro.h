@@ -37,12 +37,32 @@
    }
 #endif
 
+#include <armadillo>
+
+/**
+   ARMADILLO LIB CITES :
+
+   Conrad Sanderson and Ryan Curtin.
+   Armadillo: a template-based C++ library for linear algebra.
+   Journal of Open Source Software, Vol. 1, pp. 26, 2016.
+
+   Conrad Sanderson and Ryan Curtin.
+   Practical sparse matrices in C++ with hybrid storage and template-based expression optimisation.
+   Mathematical and Computational Applications, Vol. 24, No. 3, 2019. 
+*/
+
+namespace AllegroPP {
+   using timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>;
+   using duration = std::chrono::duration<double>;
+   using clock = std::chrono::high_resolution_clock;
+}
+
+#define MAX(a, b) (((a > b))?(a):(b))
+#define MIN(a, b) (((a < b))?(a):(b))
+
 #include <allegro++/math.h>
 #include <allegro++/mouse.h>
 #include <allegro++/color.h>
 #include <allegro++/primitives.h>
 #include <allegro++/sprites.h>
 #include <allegro++/gui.h>
-
-#define MAX(a, b) (((a > b))?(a):(b))
-#define MIN(a, b) (((a < b))?(a):(b))

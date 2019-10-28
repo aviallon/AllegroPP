@@ -25,6 +25,7 @@ namespace AllegroPP {
    /* statics */
       static std::vector<Allegro*> instances;
       static std::vector<std::thread> allegro_threads;
+      static std::vector<std::thread> event_threads;
       static unsigned loops; // Stop loop when it reaches 0
       static ALLEGRO_FILE *arial_file;
       static ALLEGRO_FONT *default_font;
@@ -39,20 +40,23 @@ namespace AllegroPP {
       ALLEGRO_TIMER *timer;
       ALLEGRO_EVENT_QUEUE *event_queue;
       
+      bool event_loop_working = false;
+      
       bool focus = true;
       
       ALLEGRO_BITMAP *ancien_emplacement;
       
-      void (*mouse_clicked_func_ptr)(Allegro*, void*, uint16_t, int, int);
-      void (*mouse_moved_func_ptr)(Allegro*, void*, uint16_t, int, int);
+      void (*mouse_clicked_func_ptr)(Allegro*, void* /*context*/, uint16_t, int, int);
+      void (*mouse_moved_func_ptr)(Allegro*, void* /*context*/, uint16_t, int, int);
       
-      void (*key_down_func_ptr)(Allegro*, void*, uint16_t, uint8_t);
-      void (*key_up_func_ptr)(Allegro*, void*, uint16_t, uint8_t);
+      void (*key_down_func_ptr)(Allegro*, void* /*context*/, uint16_t, uint8_t);
+      void (*key_up_func_ptr)(Allegro*, void* /*context*/, uint16_t, uint8_t);
       
-      void (*window_resized_func_ptr)(Allegro*, void*, uint16_t, int, int);
+      void (*window_resized_func_ptr)(Allegro*, void* /*context*/, uint16_t, int, int);
+      void (*window_closed_func_ptr)(Allegro*, void* /*context*/);
       
-      void (*redraw_func_ptr)(Allegro*, float);
-      void (*animate_func_ptr)(Allegro*, float);
+      void (*redraw_func_ptr)(Allegro*, float /*fps*/);
+      void (*animate_func_ptr)(Allegro*, float /*fps*/);
       
       void* context;
       
@@ -73,11 +77,15 @@ namespace AllegroPP {
       void _exec_key_repeat_function();
       
       void _exec_window_resized_function();
+      void _exec_window_closed_function();
       
       void _stop_loop();
       void _start_loop();
       void _loop_element();
+      void _event_loop_element();
+      void _quit();
       static void _loop(Allegro* allegro);
+      static void _event_loop(Allegro* allegro);
       
       ALLEGRO_EVENT_SOURCE user_generated;
       
@@ -85,6 +93,12 @@ namespace AllegroPP {
       float m_FPS;
       bool cursorSticked = false;
       unsigned thread_id;
+      unsigned frame_skipped;
+      bool flush_event_queue = false;
+      bool timer_fired = false;
+      
+      double effective_frametime;
+      timestamp last_frame;
       
       std::vector<ALLEGRO_FONT*> fonts;
 
@@ -142,7 +156,17 @@ namespace AllegroPP {
        */
       void bindKeyUp(void (*fptr)(Allegro*, void*, uint16_t, uint8_t));
       
-      void bindWindowResized( void(*fptr)(Allegro*, void*, uint16_t, int, int) );
+      /**
+       * @brief Set the function called each time the window is resized
+       * @param fptr Pointer to a function matching this footprint : void onWindowResized(Allegro* allegro, void* context, uint16_t event, int w, int h)
+       */
+      void bindWindowResized( void(*fptr)(Allegro*, void* /*context*/, uint16_t, int, int) );
+      
+      /**
+       * @brief Set the function called when the window is closed (either by function call or by user interaction)
+       * @param fptr Pointer to a function matching this footprint : void onWindowClosed(Allegro* allegro, void* context) 
+       */
+      void bindWindowClosed( void(*fptr)(Allegro*, void*) );
       
       /**
        * @brief Set the function called when the screen has to be redrawn.
@@ -150,7 +174,6 @@ namespace AllegroPP {
        * You basically draw all your stuff here. Weird glitches will happen if you draw during other events.
        * @param fptr Pointer to a function matching this footprint : void redraw(Allegro* allegro, float FPS)
        */
-
       void setRedrawFunction(void (*fptr)(Allegro*, float));
       
       /**
@@ -404,6 +427,12 @@ namespace AllegroPP {
        * @return 
        */
       long int getTime();
+      
+      /**
+       * @brief Get effective frametime in milliseconds
+       * @return 
+       */
+      double getFrametime();
       
       /**
        * @brief Returns mouse X coordinate from top-left of window
