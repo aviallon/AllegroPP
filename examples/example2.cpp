@@ -1,4 +1,4 @@
-#include "../allegro.h"
+#include <allegro++/allegro.h>
 
 void mouseMove(Allegro* allegro, void* context, uint16_t event, int x, int y){
 	if(event & Allegro::MOUSE_MOVED && !(event & Allegro::MOUSE_WHEELED)) {

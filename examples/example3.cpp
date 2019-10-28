@@ -1,4 +1,4 @@
-#include "../allegro.h"
+#include <allegro++/allegro.h>
 #include <iostream>
 #include <string>
 #include <exception>
