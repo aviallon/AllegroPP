@@ -34,3 +34,7 @@
 # Specific file
 src/allegro++/primitives.cpp
 
+# Codelite
+.codelite
+compile_commands.json
+build-debug
