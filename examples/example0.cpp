@@ -56,6 +56,7 @@ void fen2redr(Allegro* allegro, float FPS){
 
 void testBtn(Allegro* allegro, Button* btn){
    std::cout << btn->name << std::endl;
+   allegro->getGUI()->displayMessage(btn->name, 500);
 }
 
 void onMouseMove(Allegro* allegro, void* context, uint16_t event, int x, int y){
@@ -97,10 +98,16 @@ int main(){
    cout << 1.0f/30 << endl;
    
    Vec2D v1(3, 1);
-   Vec2D v2(-1, 1);
+   Vec2D v2(-1, 0);
+   
+   // Yup, you can define colors like that x)
+   Color red = 0xFF0000;
+   Color blue = 0x0000FF;
+   Color magenta = red + blue;
    
    cout << "v1 = " << v1 << ", " << "v2 = " << v2 << endl;
    cout << "v1·v2 = " << v1*v2 << "; v1*2 = " << 2*v1 << endl;
+   cout << "red + blue = " << red << " + " << blue << " = " << magenta << endl;
 
    fen1.setRedrawFunction(&fen1redr);
    fen2.setRedrawFunction(&fen2redr);
@@ -112,8 +119,6 @@ int main(){
    
    fen1.bindWindowClosed(&onWindowClosed);
    fen2.bindWindowClosed(&onWindowClosed);
-   
-   fen1.getGUI()->displayMessage("test", 1000);
    
    fen1.getGUI()->newBtn("Test", 0, 0, 60, 150, &testBtn);
    fen2.getGUI()->newBtn("Pomme", 100, 0, 60, 150, &testBtn);

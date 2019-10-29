@@ -3,6 +3,7 @@
 #include <allegro++/allegro.h>
 #include <functional>
 #include <filesystem>
+#include <queue>
 
 namespace AllegroPP {
    
@@ -129,11 +130,12 @@ namespace AllegroPP {
    class Message{
    public:
       
-      Message(std::string message, float duration, float currentTime);
+      Message(std::string message, float duration, float currentTime, Color color);
       
       std::string message;
       float duration;
       float t0 = 0;
+      ALLEGRO_COLOR color;
    };
 
    class InputBox{
@@ -224,6 +226,7 @@ namespace AllegroPP {
       
       void drawLastMessage();
       
+      void displayMessage(std::string message, float duration, Color color);
       void displayMessage(std::string message, float duration);
       
       int getBtnIndexByID(int id);
@@ -244,7 +247,7 @@ namespace AllegroPP {
       std::vector<Image> images;
       std::vector<Button> buttons;
       std::vector<InputBox> input_boxes;
-      std::vector<Message> messages;
+      std::queue<Message> messages;
    };
 
 }

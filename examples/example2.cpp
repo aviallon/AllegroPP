@@ -21,7 +21,7 @@ void mouseMove(Allegro* allegro, void* context, uint16_t event, int x, int y){
       ctx->y = y;
 	}
 
-	// The context pointer is used to share any kind of information between different functions bound to events. I'll make an example about that later.
+	// The context pointer is used to share any kind of information between different functions bound to events.
 }
 
 int main(){

@@ -160,10 +160,12 @@ namespace AllegroPP {
       cursor.drawSprite(x, y, w, h);
    }
 
-   Message::Message(std::string message, float duration, float currentTime){
-      this->message = message;
-      this->duration = duration;
-      this->t0 = currentTime;
+   Message::Message(std::string message, float duration, float currentTime, Color color)
+      : message(message), duration(duration), t0(currentTime) {
+//      this->message = message;
+//      this->duration = duration;
+//      this->t0 = currentTime;
+      this->color = color.toAllegro();
    }
 
    InputBox::InputBox(Allegro* allegro, std::string text, int x, int y, int height, int width, void (*input_validated)(Allegro*, InputBox*)){
@@ -468,27 +470,38 @@ namespace AllegroPP {
       if (messages.size() == 0)
          return;
       
-      Message lastMessage = messages[messages.size() - 1];
+      if(messages.front().t0 == 0)
+         messages.front().t0 = allegro->getTime();
       
-      float duree = MAX((allegro->getTime() - lastMessage.t0), 0);
-      if(duree >= lastMessage.duration){
-         messages.pop_back();
+      float duree = MAX((allegro->getTime() - messages.front().t0), 0);
+      if(duree >= messages.front().duration){
+         messages.pop();
          return;
       }
 
-      int alpha = 0;
-      if(lastMessage.duration - duree <= 1000){
-         alpha = -255*MAX((lastMessage.duration - duree), 0)/1000;
+      /* Very cool text fade animation */
+      float limit = MIN(messages.front().duration, 750);
+      float alpha = 1.0f;
+      if(messages.front().duration - duree <= limit){
+         alpha = MAX((messages.front().duration - duree), 0)/limit;
+         alpha *= alpha;
+         alpha = sin(alpha*Math::PI/2);
+      } else if (duree <= 250) {
+         float val = duree / 250;
+         alpha = sin(val*val*Math::PI/2);
       }
+      Color c = Color(messages.front().color);
+      c.setAlpha(alpha);
       
-      allegro->draw_text(allegro->getDisplayWidth()/2, allegro->getDisplayHeight()-20, lastMessage.message, allegro->rgba(255-alpha, 255-alpha, 255-alpha, 0));
-      if(duree >= lastMessage.duration){
-         messages.pop_back();
-      }
+      allegro->draw_text(allegro->getDisplayWidth()/2, allegro->getDisplayHeight()-20, messages.front().message, c);
    }
 
+   void GUI::displayMessage(std::string message, float duration, Color color){
+      messages.push(Message(message, duration, 0, color));
+   }
+   
    void GUI::displayMessage(std::string message, float duration){
-      messages.push_back(Message(message, duration, allegro->getTime()));
+      messages.push(Message(message, duration, 0, Color(Colors::black)));
    }
 
    int GUI::getBtnIndexByID(int id){

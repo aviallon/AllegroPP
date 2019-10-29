@@ -25,6 +25,10 @@ namespace AllegroPP{
       
       Color blend(const Color& c);
       
+      Color operator=(unsigned hex);
+      
+      void setAlpha(float alpha);
+      
       friend std::ostream& operator<<(std::ostream& os, const Color& c);
       
       std::string toHex() const;

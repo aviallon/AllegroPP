@@ -38,6 +38,20 @@ namespace AllegroPP {
    Color Color::operator+(const Color& c){
       return Color(this->_r+c._r, this->_g+c._g, this->_b+c._b);
    }
+   
+   Color Color::operator =(unsigned hex){
+      Color c;
+      c._r = Math::clamp((hex & 0xFF0000)/0x010000, 0, 0xFF);
+      c._g = Math::clamp((hex & 0x00FF00)/0x000100, 0, 0xFF);
+      c._b = Math::clamp((hex & 0x0000FF)/0x000001, 0, 0xFF);
+      c._a = 1.0f - Math::clamp((float)(hex & 0xFF000000)/0xFF000000, 0.0f, 1.0f);
+      
+      return c;
+   }
+   
+   void Color::setAlpha(float alpha){
+      _a = alpha;
+   }
 
    Color Color::mix(const Color& c){
       return Color(Math::clamp(this->_r, 0, c._r), Math::clamp(this->_g, 0, c._g), Math::clamp(this->_b, 0, c._b));
@@ -60,7 +74,7 @@ namespace AllegroPP {
 
    ALLEGRO_COLOR Color::toAllegro(){
       if(_a != 1)
-         return al_map_rgba(_r, _g, _b, _a);
+         return al_map_rgba(_r, _g, _b, _a*255);
       else
          return al_map_rgb(_r, _g, _b);
    }
