@@ -13,6 +13,7 @@ namespace AllegroPP {
    class Sprite;
    class SpriteMap;
    class InputBox;
+   class Color;
 
    typedef unsigned char uchar;
 
@@ -103,8 +104,6 @@ namespace AllegroPP {
       std::vector<ALLEGRO_FONT*> fonts;
 
    public:
-      static ALLEGRO_COLOR white; //!< Defined to white color during init()
-      static ALLEGRO_COLOR black; //!< Defined to black color during init()
 
       Allegro();
       ~Allegro();
@@ -205,6 +204,7 @@ namespace AllegroPP {
        * @param g Green color
        * @param b Blue color
        * @return Returns an Allegro color struct
+       * @deprecated
        */
       struct ALLEGRO_COLOR rgb(int r, int g, int b);
       
@@ -217,6 +217,7 @@ namespace AllegroPP {
        * @param b Blue color
        * @param a Alpha channel - for transparency
        * @return Returns an Allegro color struct
+       * @deprecated
        */
       struct ALLEGRO_COLOR rgba(int r, int g, int b, int a);
       
@@ -229,6 +230,7 @@ namespace AllegroPP {
        * @param color Well, the pixel's color
        */
       void set_pixel(int x, int y, ALLEGRO_COLOR color);
+      void set_pixel(int x, int y, Color color);
       
       /**
        * @brief Draws a line between the two specified pixels.
@@ -240,7 +242,7 @@ namespace AllegroPP {
        * @param width Line width (in pixels). Default : 1px
        */
       void draw_line(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width = 1);
-      void draw_line(int x1, int y1, int x2, int y2);
+      void draw_line(int x1, int y1, int x2, int y2, Color color, int width = 1);
       
       /**
        * @brief Draws an ellipsis inside the specified rect.
@@ -255,14 +257,7 @@ namespace AllegroPP {
        * @param filled Fills the ellipsis with its border's color. Default : false
        */
       void draw_ellipse(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width = 1, bool filled = false);
-      /**
-       * @brief Draws an ellipsis inside the specified rect in black.
-       * @param x1 First pixel's abscissa
-       * @param y1 First pixel's ordinate
-       * @param x2 Second pixel's abscissa
-       * @param y2 Second pixel's ordinate
-       */
-      void draw_ellipse(int x1, int y1, int x2, int y2);
+      void draw_ellipse(int x1, int y1, int x2, int y2, Color color, int width = 1, bool filled = false);
       
       /**
        * @brief Draws an ellipsis at the specified point with given radius.
@@ -275,6 +270,8 @@ namespace AllegroPP {
        * @param filled Fills the ellipsis with its border's color. Default : false
        */
       void draw_ellipse_r(int cx, int cy, int rx, int ry, ALLEGRO_COLOR color, int width = 1, bool filled = false);
+      void draw_ellipse_r(int cx, int cy, int rx, int ry, Color color, int width = 1, bool filled = false);
+      
       
       /**
        * @brief Draws a rectangle.
@@ -287,6 +284,7 @@ namespace AllegroPP {
        * @param filled Fills the rectangle with its border's color. Default : false
        */
       void draw_rectangle(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width = 1, bool filled = false);
+      void draw_rectangle(int x1, int y1, int x2, int y2, Color color, int width = 1, bool filled = false);
       void draw_rectangle(int x1, int y1, int x2, int y2);
       
       /**
@@ -298,9 +296,9 @@ namespace AllegroPP {
        * @param align Text align. Can be ALLEGRO_ALIGN_(LEFT|RIGHT|CENTER|CENTRE) (CENTRE and CENTER are the same)
        * @param font Font in ALLEGRO_FONT format. You can grab the default one using getDefaultFont();
        */
-      void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align, ALLEGRO_FONT* font);
-      void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align = ALLEGRO_ALIGN_CENTER);
-      void draw_text(int x, int y, const char* text, ALLEGRO_COLOR color, int align = ALLEGRO_ALIGN_CENTER);
+      void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align = ALLEGRO_ALIGN_CENTER, ALLEGRO_FONT* font = nullptr);
+      void draw_text(int x, int y, std::string text, Color color, int align = ALLEGRO_ALIGN_CENTER, ALLEGRO_FONT* font = nullptr);
+      inline void draw_text(int x, int y, std::string text);
       
       /**
        * @brief Draws an allegro bitmap at the specified coordinates
@@ -309,6 +307,9 @@ namespace AllegroPP {
        * @param image The bitmap in ALLEGRO format.
        */
       void draw_image(int x, int y, ALLEGRO_BITMAP* image);
+      void draw_image(int x, int y, Sprite image);
+
+      
       /**
        * @brief Draws a scaled allegro bitmap at the specified coordinates
        * @param x Abscissa
@@ -318,6 +319,8 @@ namespace AllegroPP {
        * @param image The bitmap in ALLEGRO format.
        */
       void draw_scaled_image(int x, int y, int w, int h, ALLEGRO_BITMAP* image);
+      void draw_scaled_image(int x, int y, int w, int h, Sprite image);
+
       
       /**
        * @brief WIP function. Doesn't work at all yet
@@ -335,20 +338,14 @@ namespace AllegroPP {
        * @param font The font in Allegro format
        * @return Return how much pixels long the displayed string would be on screen.
        */
-      int getTextWidth(std::string text, ALLEGRO_FONT* font);
-      /**
-       * @brief Get the actuall length of a string with default font
-       * @param text
-       * @return Return how much pixels long the displayed string would be on screen.
-       */
-      int getTextWidth(const char* text);
+      int getTextWidth(std::string text, ALLEGRO_FONT* font = nullptr);
       
       /**
        * @brief Get the font's max height. Can be conbined with getTextWidth to know precisely what space a string would use on screen.
        * @param font The font in Allegro format.
        * @return Return the font height in pixels.
        */
-      int getFontHeight(ALLEGRO_FONT* font);
+      int getFontHeight(ALLEGRO_FONT* font = nullptr);
       
       /**
        * @brief Get the default font
@@ -367,6 +364,7 @@ namespace AllegroPP {
        * @return Return the number of the clicked button.
        */
       int showDialogMessage(char const *title, char const *heading, char const *text, char const *buttons, int flags = ALLEGRO_MESSAGEBOX_YES_NO);
+      
       /**
        * @brief Displays a system file chooser
        * @param initial_path Default path
@@ -463,6 +461,7 @@ namespace AllegroPP {
        * @param cont A void* pointer.
        */
       void setContext(void* cont);
+      
       /**
        * @brief Get the multipurpose pointer.
        */
@@ -517,6 +516,7 @@ namespace AllegroPP {
       static void _undefined_(Allegro* master, void* context, uint16_t event, int x, int y);
       static void _undefined_(Allegro* master, void* context, uint16_t event, uint8_t keycode);
       static void _undefined_(Allegro* master, float FPS);
+      static void _undefined_(Allegro* master, void* context);
       
       void* gui_ptr;
       

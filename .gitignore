@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# Specific file
+src/allegro++/primitives.cpp
+

@@ -5,8 +5,7 @@ namespace AllegroPP {
 
    std::vector<Allegro*> Allegro::instances;
    unsigned Allegro::loops; // Stop loop when it reaches 0
-   ALLEGRO_COLOR Allegro::white;
-   ALLEGRO_COLOR Allegro::black;
+   
    ALLEGRO_FILE *Allegro::arial_file;
    ALLEGRO_FONT *Allegro::default_font;
    bool Allegro::loop_started = false;
@@ -24,6 +23,10 @@ namespace AllegroPP {
    }
 
    void Allegro::_undefined_(Allegro* master, void* context, uint16_t event, uint8_t keycode){
+      
+   }
+   
+   void Allegro::_undefined_(Allegro* master, void* context){
       
    }
 
@@ -51,6 +54,7 @@ namespace AllegroPP {
       key_down_func_ptr = &Allegro::_undefined_;
       key_up_func_ptr = &Allegro::_undefined_;
       window_resized_func_ptr = &Allegro::_undefined_;
+      window_closed_func_ptr = &Allegro::_undefined_;
       
       keys = std::vector<bool>(255, false);
       mouseBtns = std::vector<bool>(4, false);
@@ -202,7 +206,7 @@ namespace AllegroPP {
    }
 
    void Allegro::setContext(void* cont){
-      context = cont;
+      context = (void*)cont;
    }
 
    void* Allegro::getContext(){
@@ -273,9 +277,9 @@ namespace AllegroPP {
    void Allegro::draw_line(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width){
       al_draw_line((float)x1, (float)y1, (float)x2, (float)y2, color, (float)width);
    }
-
-   void Allegro::draw_line(int x1, int y1, int x2, int y2){
-      al_draw_line((float)x1, (float)y1, (float)x2, (float)y2, al_map_rgb(0,0,0), 1);
+   
+   void Allegro::draw_line(int x1, int y1, int x2, int y2, Color color, int width){
+      al_draw_line((float)x1, (float)y1, (float)x2, (float)y2, color.toAllegro(), (float)width);
    }
 
    // ELLIPSE
@@ -285,7 +289,25 @@ namespace AllegroPP {
       else
          al_draw_ellipse((float)cx, (float)cy, (float)rx, (float)ry, color, (float)width);
    }
+   
+   void Allegro::draw_ellipse_r(int cx, int cy, int rx, int ry, Color color, int width, bool filled){
+      if(filled)
+         al_draw_filled_ellipse((float)cx, (float)cy, (float)rx, (float)ry, color.toAllegro());
+      else
+         al_draw_ellipse((float)cx, (float)cy, (float)rx, (float)ry, color.toAllegro(), (float)width);
+   }
 
+   void Allegro::draw_ellipse(int x1, int y1, int x2, int y2, Color color, int width, bool filled){
+      int cx = (x1+x2)/2;
+      int cy = (y1+y2)/2;
+      int rx = (x2-x1)/2;
+      int ry = (y2-y1)/2;
+      if(filled)
+         al_draw_filled_ellipse((float)cx, (float)cy, (float)rx, (float)ry, color.toAllegro());
+      else
+         al_draw_ellipse((float)cx, (float)cy, (float)rx, (float)ry, color.toAllegro(), (float)width);
+   }
+   
    void Allegro::draw_ellipse(int x1, int y1, int x2, int y2, ALLEGRO_COLOR color, int width, bool filled){
       int cx = (x1+x2)/2;
       int cy = (y1+y2)/2;
@@ -294,11 +316,7 @@ namespace AllegroPP {
       if(filled)
          al_draw_filled_ellipse((float)cx, (float)cy, (float)rx, (float)ry, color);
       else
-         al_draw_circle((float)cx, (float)cy, (float)rx, color, (float)width);
-   }
-
-   void Allegro::draw_ellipse(int x1, int y1, int x2, int y2){
-      draw_ellipse(x1, y1, x2, y2, al_map_rgb(0,0,0), 1);
+         al_draw_ellipse((float)cx, (float)cy, (float)rx, (float)ry, color, (float)width);
    }
 
 
@@ -309,43 +327,59 @@ namespace AllegroPP {
       else
          al_draw_rectangle((float)x1, (float)y1, (float)x2, (float)y2, color, (float)width);
    }
-
-   void Allegro::draw_rectangle(int x1, int y1, int x2, int y2){
-      al_draw_rectangle((float)x1, (float)y1, (float)x2, (float)y2, al_map_rgb(0,0,0), 1);
+   
+   void Allegro::draw_rectangle(int x1, int y1, int x2, int y2, Color color, int width, bool filled){
+      if(filled)
+         al_draw_filled_rectangle((float)x1, (float)y1, (float)x2, (float)y2, color.toAllegro());
+      else
+         al_draw_rectangle((float)x1, (float)y1, (float)x2, (float)y2, color.toAllegro(), (float)width);
    }
 
    void Allegro::draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align, ALLEGRO_FONT* font){
+      if(font == nullptr)
+         font = default_font;
+      
       const char *c_text = text.c_str();
       // Mutexes are required in these function because otherwise text becomes lost when having multiple threads
       Allegro::draw_text_mutex.try_lock_for(std::chrono::milliseconds(20));
       al_draw_text(font, color, x, y, align, c_text);
       Allegro::draw_text_mutex.unlock();
    }
-
-   void Allegro::draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align){
+   
+   void Allegro::draw_text(int x, int y, std::string text, Color color, int align, ALLEGRO_FONT* font){
+      if(font == nullptr)
+         font = default_font;
+      
       const char *c_text = text.c_str();
+      // Mutexes are required in these function because otherwise text becomes lost when having multiple threads
       Allegro::draw_text_mutex.try_lock_for(std::chrono::milliseconds(20));
-      al_draw_text(default_font, color, x, y, align, c_text);
+      al_draw_text(font, color.toAllegro(), x, y, align, c_text);
       Allegro::draw_text_mutex.unlock();
    }
-
-   void Allegro::draw_text(int x, int y, const char* text, ALLEGRO_COLOR color, int align){
-      /* Draws text on the screen at the specifed coordinates. Add "\0" at the end of your string to avoid the appearance of weird characters. */
-      Allegro::draw_text_mutex.try_lock_for(std::chrono::milliseconds(20));
-      al_draw_text(default_font, color, x, y, align, text);
-      Allegro::draw_text_mutex.unlock();
+   
+   inline void Allegro::draw_text(int x, int y, std::string text){
+      return draw_text(x, y, text, Color());
    }
 
    void Allegro::draw_image(int x, int y, ALLEGRO_BITMAP* image){
-      if(image == 0)
-         throw(10);
+      if(image == nullptr)
+         throw new std::invalid_argument("Provided bitmap is nullptr !");
       al_draw_bitmap(image, x, y, 0);
+   }
+   
+   void Allegro::draw_image(int x, int y, Sprite image){
+      image.drawSprite(x, y);
    }
 
    void Allegro::draw_scaled_image(int x, int y, int w, int h, ALLEGRO_BITMAP* image){
-      if(image == 0)
-         throw(10);
+      if(image == nullptr)
+         throw new std::invalid_argument("Provided bitmap is nullptr !");
+         
       al_draw_scaled_bitmap(image, 0, 0, al_get_bitmap_width(image), al_get_bitmap_height(image), x, y, w, h, 0);
+   }
+   
+   void Allegro::draw_scaled_image(int x, int y, int w, int h, Sprite image){
+      image.drawSprite(x, y, w, h);         
    }
 
    Sprite Allegro::getSubBitmapFromDisplay(int x, int y, int w, int h){
@@ -363,14 +397,14 @@ namespace AllegroPP {
    }
 
    int Allegro::getTextWidth(std::string text, ALLEGRO_FONT* font){
+      if(font == nullptr)
+         font = default_font;
       return al_get_text_width(font, text.c_str());
    }
 
-   int Allegro::getTextWidth(const char* text){
-      return al_get_text_width(default_font, text);
-   }
-
    int Allegro::getFontHeight(ALLEGRO_FONT* font){
+      if(font == nullptr)
+         font = default_font;
       return al_get_font_line_height(font);
    }
 
@@ -422,9 +456,6 @@ namespace AllegroPP {
        {
            return -1;
        }
-
-      white = al_map_rgb(255, 255, 255);
-      black = al_map_rgb(0, 0, 0);
       
       al_install_keyboard();
       al_install_mouse();
@@ -518,7 +549,7 @@ namespace AllegroPP {
    }
 
    void Allegro::clearScreen(){
-      al_clear_to_color(white);
+      al_clear_to_color(Color(Colors::white).toAllegro());
    }
    
    double Allegro::getFrametime(){
@@ -721,7 +752,9 @@ namespace AllegroPP {
       
       if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
       {
+         flip_display_mutex.try_lock();
          _exec_window_closed_function();
+         flip_display_mutex.unlock();
          _stop_loop();
          
          return;
@@ -730,6 +763,8 @@ namespace AllegroPP {
       if(ev.type == ALLEGRO_EVENT_TIMER){
          timer_fired = true;
          
+         if(display == nullptr || looping == false)
+            return;
          _exec_key_repeat_function();
       }
       
@@ -857,3 +892,4 @@ namespace AllegroPP {
    }
    
 }
+     

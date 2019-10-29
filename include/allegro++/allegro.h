@@ -66,5 +66,4 @@ namespace AllegroPP {
 #include <allegro++/mouse.h>
 #include <allegro++/color.h>
 #include <allegro++/primitives.h>
-#include <allegro++/sprites.h>
 #include <allegro++/gui.h>

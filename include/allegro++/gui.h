@@ -10,6 +10,43 @@ namespace AllegroPP {
    class Sprite;
 
    using std::shared_ptr;
+   
+   class Sprite{
+   private:
+      std::shared_ptr<ALLEGRO_BITMAP> sprite;
+      bool defined = false;
+   public:
+      Sprite();
+      
+      Sprite(ALLEGRO_BITMAP* bmp);
+
+      Sprite(shared_ptr<ALLEGRO_BITMAP> sprt);
+      
+      void drawSprite(int x, int y, unsigned w = 0, unsigned h=0, bool alignCenter = false);
+      
+      float getWidth();
+      
+      float getHeight();
+      
+      operator bool();
+      bool isDefined();
+   };
+
+   class SpriteMap{
+      std::string rel_path;
+      std::shared_ptr<ALLEGRO_BITMAP> spritemap;
+
+   public:
+      
+      SpriteMap();
+
+      SpriteMap(std::string rel_path);
+      
+      Sprite getSprite(int x, int y, int w, int h);
+      
+      Sprite getWholeSprite();
+
+   };
 
    class Button {
    private:
@@ -84,6 +121,7 @@ namespace AllegroPP {
       Allegro* allegro;
       int x, y;
       float w, h;
+      
       Sprite old_place;
       Sprite cursor;
    };
