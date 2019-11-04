@@ -35,5 +35,43 @@ namespace AllegroPP {
       
       friend std::ostream& operator<<(std::ostream& os, const Vec2D &v);
    };
+   
+   class Vec3D {
+   private:
+      arma::vec3 vec;
+   public:
+   
+      Vec3D(double x = 0.0, double y = 0.0, double z = 0.0);
+      Vec3D(arma::vec3 v);
+      
+      Vec3D operator+(const Vec3D &v2);
+      Vec3D operator-(const Vec3D &v2);
+      Vec3D operator/(double k);
+      
+      double getX();
+      double getY();
+      double getZ();
+      
+      void setX(double x);
+      void setY(double y);
+      void setZ(double z);
+      
+      friend Vec3D operator*(const Vec3D &v, double k);
+      friend Vec3D operator*(double k, const Vec3D &v);
+      
+      /**
+       * @brief Computes the dot product between two vecs
+       * @param Vec2D
+       */
+      double operator*(const Vec3D &v2);
+      
+      /**
+       * @brief Returns vectorial product of the two vectors
+       * @param v2
+       */
+      Vec3D operator^(const Vec3D &v2);
+      
+      friend std::ostream& operator<<(std::ostream& os, const Vec3D &v);
+   };
 
 }

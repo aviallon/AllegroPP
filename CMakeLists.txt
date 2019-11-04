@@ -69,6 +69,8 @@ find_library(ALLEGRO_LIBS NAMES
    allegro_primitives
    allegro_ttf
    armadillo
+   GL
+   GLU
    stdc++fs)
 
 target_link_libraries(${LIBNAME} allegro)

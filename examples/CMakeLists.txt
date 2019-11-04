@@ -20,6 +20,8 @@ link_libraries(
    allegro_font
    allegro_color
    armadillo
+   GL
+   GLU
    stdc++fs)
    
 include_directories(
