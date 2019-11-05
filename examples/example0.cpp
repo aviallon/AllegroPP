@@ -12,8 +12,10 @@ public:
    bool winClosed = false;
    unsigned animate_counter = 0;
    
-   vector<Allegro> windows;
-   vector<std::string> strings;
+   queue<Allegro> windows;
+   queue<std::string> strings;
+   
+   unsigned owner_number = 0;
 };
 
 double i = 0.0;
@@ -22,6 +24,8 @@ void fen1redr(Allegro* allegro, float FPS){
    allegro->clearScreen();
    
    Context *ctx = (Context*)allegro->getContext();
+   
+   std::cout << "Test..." << std::endl;
    
    if(ctx->winClosed){
       Color green(0x00FF00);
@@ -75,11 +79,12 @@ void testBtn(Allegro* allegro, Button* btn){
    
    Context *ctx = (Context*)allegro->getContext();
    
-   ctx->windows.push_back(Allegro());
-   ctx->windows[ctx->windows.size() - 1].createWindow(24, 100, 100);
+   ctx->windows.push(Allegro());
+   std::cout << "Thread ID : " << ctx->windows.back().getThreadId() << std::endl;
+   ctx->windows.back().createWindow(24, 100, 100);
    //ctx->strings.push_back(std::string("WTF"));
    //ctx->windows[ctx->windows.size() - 1].setContext(&ctx->strings[ctx->strings.size() - 1]);
-   ctx->windows[ctx->windows.size() - 1].setRedrawFunction(&popRedraw);
+   ctx->windows.back().setRedrawFunction(&popRedraw);
 }
 
 void onMouseMove(Allegro* allegro, void* context, uint16_t event, int x, int y){
@@ -94,14 +99,27 @@ void animateFen1(Allegro* allegro, float fps){
    Context *ctx = (Context*)allegro->getContext();
    ctx->animate_counter++;
    
-   std::this_thread::sleep_for(std::chrono::milliseconds(600));
+   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 void onWindowClosed(Allegro* allegro, void* context){
    Context *ctx = (Context*)context;
    ctx->winClosed = true;
+   ctx->owner_number--;
+   
+   if(ctx->owner_number == 0){
+      while(ctx->windows.size() > 0){
+         ctx->windows.front().quit();
+      }
+   }
    
    cout << "You closed a window !" << endl;
+}
+
+void onWindowCreated(Allegro* allegro, void* context){
+   Context *ctx = (Context*)context;
+   
+   ctx->owner_number++;
 }
 
 int main(){
@@ -112,11 +130,14 @@ int main(){
    Allegro fen1 = Allegro();
    Allegro fen2 = Allegro();
    
-   fen1.createWindow(45, 640, 480); // Create a window with a width of 640 and a height of 480, refreshing at 30 fps.
-   fen2.createWindow(30, 200, 200);
-   
    fen1.setContext((void*)&ctx);
    fen2.setContext((void*)&ctx);
+   
+   fen1.bindWindowCreated(&onWindowCreated);
+   fen2.bindWindowCreated(&onWindowCreated);
+   
+   fen1.createWindow(10, 640, 480); // Create a window with a width of 640 and a height of 480, refreshing at 30 fps.
+   fen2.createWindow(10, 200, 200);
    
    cout << 1.0f/30 << endl;
    

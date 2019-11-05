@@ -4,6 +4,7 @@
 #include <functional>
 #include <filesystem>
 #include <queue>
+#include <mutex>
 
 namespace AllegroPP {
    
@@ -131,12 +132,17 @@ namespace AllegroPP {
    public:
       
       Message(std::string message, float duration, float currentTime, Color color);
+      Message(const Message& msg);
+      
       ~Message();
+      
+      std::timed_mutex being_drawn;
       
       std::string message;
       float duration;
       float t0 = 0;
       ALLEGRO_COLOR color;
+      
    };
 
    class InputBox{

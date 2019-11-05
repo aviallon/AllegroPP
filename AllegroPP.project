@@ -25,6 +25,11 @@
   </VirtualDirectory>
   <VirtualDirectory Name="src">
     <VirtualDirectory Name="allegro++">
+      <File Name="src/allegro++/messages.cpp"/>
+      <File Name="src/allegro++/image.cpp"/>
+      <File Name="src/allegro++/cursor.cpp"/>
+      <File Name="src/allegro++/inputbox.cpp"/>
+      <File Name="src/allegro++/button.cpp"/>
       <File Name="src/allegro++/sprites.cpp"/>
       <File Name="src/allegro++/color.cpp"/>
       <File Name="src/allegro++/math.cpp"/>

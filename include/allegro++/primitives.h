@@ -5,6 +5,8 @@
 #include <allegro++/allegro.h>
 
 namespace AllegroPP {
+   
+   using std::shared_ptr;
 
    class Mouse;
    class Button;
@@ -30,18 +32,20 @@ namespace AllegroPP {
       static std::vector<std::shared_ptr<ALLEGRO_THREAD> > event_threads;
       //static std::vector<std::thread> event_threads;
       static unsigned loops; // Stop loop when it reaches 0
+      static unsigned currently_drawing_or_listening_for_events;
       static ALLEGRO_FILE *arial_file;
       static ALLEGRO_FONT *default_font;
       static bool loop_started;
-      static std::timed_mutex flip_display_mutex;
       static std::timed_mutex draw_text_mutex;
 
    /* end of statics */
 
-      ALLEGRO_DISPLAY *display = nullptr;
-      ALLEGRO_BITMAP *display_bitmap = nullptr;
-      ALLEGRO_TIMER *timer = nullptr;
-      ALLEGRO_EVENT_QUEUE *event_queue = nullptr;
+      std::shared_ptr<ALLEGRO_DISPLAY> display;
+      std::shared_ptr<ALLEGRO_BITMAP> display_bitmap;
+      std::shared_ptr<ALLEGRO_TIMER> timer;
+      std::shared_ptr<ALLEGRO_EVENT_QUEUE> event_queue;
+      
+      std::timed_mutex flip_display_mutex;
       
       bool event_loop_working = false;
       
@@ -49,7 +53,7 @@ namespace AllegroPP {
       
       bool focus = true;
       
-      ALLEGRO_BITMAP *ancien_emplacement;
+      std::shared_ptr<ALLEGRO_BITMAP> ancien_emplacement;
       
       void (*mouse_clicked_func_ptr)(Allegro*, void* /*context*/, uint16_t, int, int);
       void (*mouse_moved_func_ptr)(Allegro*, void* /*context*/, uint16_t, int, int);
@@ -59,13 +63,14 @@ namespace AllegroPP {
       
       void (*window_resized_func_ptr)(Allegro*, void* /*context*/, uint16_t, int, int);
       void (*window_closed_func_ptr)(Allegro*, void* /*context*/);
+      void (*window_created_func_ptr)(Allegro*, void* /*context*/);
       
       void (*redraw_func_ptr)(Allegro*, float /*fps*/);
       void (*animate_func_ptr)(Allegro*, float /*fps*/);
       
       void* context = nullptr;
       
-      Mouse* mouse;
+      std::shared_ptr<Mouse> mouse;
 //      int old_x;
 //      int old_y;
       
@@ -83,6 +88,7 @@ namespace AllegroPP {
       
       void _exec_window_resized_function();
       void _exec_window_closed_function();
+      void _exec_window_created_function();
       
       void _stop_loop();
       void _start_loop();
@@ -112,6 +118,8 @@ namespace AllegroPP {
    public:
 
       Allegro();
+      Allegro(const Allegro& allegro);
+      
       ~Allegro();
 
       /**
@@ -172,6 +180,12 @@ namespace AllegroPP {
        * @param fptr Pointer to a function matching this footprint : void onWindowClosed(Allegro* allegro, void* context) 
        */
       void bindWindowClosed( void(*fptr)(Allegro*, void*) );
+      
+      /**
+       * @brief Set the function called when the window is created
+       * @param fptr Pointer to a function matching this footprint : void onWindowCreated(Allegro* allegro, void* context) 
+       */
+      void bindWindowCreated( void(*fptr)(Allegro*, void*) );
       
       /**
        * @brief Set the function called when the screen has to be redrawn.
@@ -511,6 +525,9 @@ namespace AllegroPP {
        */
       void quit();
       
+      
+      unsigned getThreadId();
+      
       /**
        * @brief Fake functions used as placeholders if an event/action handler is not defined
        * @param master
@@ -524,7 +541,7 @@ namespace AllegroPP {
       static void _undefined_(Allegro* master, float FPS);
       static void _undefined_(Allegro* master, void* context);
       
-      void* gui_ptr;
+      std::shared_ptr<GUI> gui_ptr;
       
       /**
        * @brief Simply get the GUI pointer

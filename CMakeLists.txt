@@ -8,6 +8,8 @@ set(LIBVERSION 1.0.0)
 
 project(${LIBNAME} VERSION ${LIBVERSION} DESCRIPTION "allegro but for C++")
 
+add_compile_options(-g -Og)
+
 add_subdirectory(examples)
 
 include(GNUInstallDirs)
