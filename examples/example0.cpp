@@ -1,6 +1,8 @@
 #include <allegro++/allegro.h>
 #include <functional>
 #include <cmath>
+#include <string>
+#include <vector>
 
 using namespace std;
 using namespace AllegroPP;
@@ -9,6 +11,9 @@ class Context {
 public:
    bool winClosed = false;
    unsigned animate_counter = 0;
+   
+   vector<Allegro> windows;
+   vector<std::string> strings;
 };
 
 double i = 0.0;
@@ -54,9 +59,27 @@ void fen2redr(Allegro* allegro, float FPS){
    allegro->draw_text(200/2, 200/2, "Hello, world!", allegro->rgb(cos(i2)*127+128, 0, 0)); // Draw "Hello, world!" in the middle of the screen.
 }
 
+void popRedraw(Allegro* allegro, float fps){
+   allegro->clearScreen();
+   
+   //std::string str = *(std::string*)allegro->getContext();
+   
+   std::cout << "Small window : " << "apples" << std::endl;
+   
+   allegro->draw_text(allegro->getDisplayWidth()/2, allegro->getDisplayHeight(), "str");
+}
+
 void testBtn(Allegro* allegro, Button* btn){
    std::cout << btn->name << std::endl;
-   allegro->getGUI()->displayMessage(btn->name, 500);
+   //allegro->getGUI()->displayMessage(btn->name, 500);
+   
+   Context *ctx = (Context*)allegro->getContext();
+   
+   ctx->windows.push_back(Allegro());
+   ctx->windows[ctx->windows.size() - 1].createWindow(24, 100, 100);
+   //ctx->strings.push_back(std::string("WTF"));
+   //ctx->windows[ctx->windows.size() - 1].setContext(&ctx->strings[ctx->strings.size() - 1]);
+   ctx->windows[ctx->windows.size() - 1].setRedrawFunction(&popRedraw);
 }
 
 void onMouseMove(Allegro* allegro, void* context, uint16_t event, int x, int y){

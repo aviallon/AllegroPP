@@ -25,23 +25,27 @@ namespace AllegroPP {
 
    /* statics */
       static std::vector<Allegro*> instances;
-      static std::vector<std::thread> allegro_threads;
-      static std::vector<std::thread> event_threads;
+      static std::vector<std::shared_ptr<ALLEGRO_THREAD> > allegro_threads;
+      //static std::vector<std::thread> allegro_threads;
+      static std::vector<std::shared_ptr<ALLEGRO_THREAD> > event_threads;
+      //static std::vector<std::thread> event_threads;
       static unsigned loops; // Stop loop when it reaches 0
       static ALLEGRO_FILE *arial_file;
       static ALLEGRO_FONT *default_font;
       static bool loop_started;
-      static std::mutex flip_display_mutex;
+      static std::timed_mutex flip_display_mutex;
       static std::timed_mutex draw_text_mutex;
 
    /* end of statics */
 
-      ALLEGRO_DISPLAY *display;
-      ALLEGRO_BITMAP *display_bitmap;
-      ALLEGRO_TIMER *timer;
-      ALLEGRO_EVENT_QUEUE *event_queue;
+      ALLEGRO_DISPLAY *display = nullptr;
+      ALLEGRO_BITMAP *display_bitmap = nullptr;
+      ALLEGRO_TIMER *timer = nullptr;
+      ALLEGRO_EVENT_QUEUE *event_queue = nullptr;
       
       bool event_loop_working = false;
+      
+      bool window_created = false;
       
       bool focus = true;
       
@@ -59,16 +63,16 @@ namespace AllegroPP {
       void (*redraw_func_ptr)(Allegro*, float /*fps*/);
       void (*animate_func_ptr)(Allegro*, float /*fps*/);
       
-      void* context;
+      void* context = nullptr;
       
       Mouse* mouse;
-      int old_x;
-      int old_y;
+//      int old_x;
+//      int old_y;
       
       std::vector<bool> keys;
       std::vector<bool> mouseBtns;
 
-      bool looping, redraw, redraw_paused;
+      bool looping = false, redraw = false, redraw_paused = false;
       
       void _exec_mouse_clicked_function(uint16_t ev);
       void _exec_mouse_moved_function(uint16_t ev);
@@ -85,16 +89,18 @@ namespace AllegroPP {
       void _loop_element();
       void _event_loop_element();
       void _quit();
-      static void _loop(Allegro* allegro);
-      static void _event_loop(Allegro* allegro);
+      static void* _loop(ALLEGRO_THREAD* thr, void* ctx);
+      //static void _loop(Allegro* allegro);
+      //static void _event_loop(Allegro* allegro);
+      static void* _event_loop(ALLEGRO_THREAD* thr, void* ctx);
       
       ALLEGRO_EVENT_SOURCE user_generated;
       
       
-      float m_FPS;
+      float m_FPS = 0;
       bool cursorSticked = false;
-      unsigned thread_id;
-      unsigned frame_skipped;
+      unsigned thread_id = 0;
+      unsigned frame_skipped = 0;
       bool flush_event_queue = false;
       bool timer_fired = false;
       
@@ -298,7 +304,7 @@ namespace AllegroPP {
        */
       void draw_text(int x, int y, std::string text, ALLEGRO_COLOR color, int align = ALLEGRO_ALIGN_CENTER, ALLEGRO_FONT* font = nullptr);
       void draw_text(int x, int y, std::string text, Color color, int align = ALLEGRO_ALIGN_CENTER, ALLEGRO_FONT* font = nullptr);
-      inline void draw_text(int x, int y, std::string text);
+      void draw_text(int x, int y, std::string text);
       
       /**
        * @brief Draws an allegro bitmap at the specified coordinates
