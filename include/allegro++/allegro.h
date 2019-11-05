@@ -15,6 +15,8 @@
 #include <sstream>
 #include <exception>
 #include <memory>
+#include <stack>
+#include <queue>
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_acodec.h>
@@ -65,8 +67,9 @@ namespace AllegroPP {
 
 #define FRAME_SKIPPED_THRESHOLD 5
 
+#include <allegro++/utility.h>
 #include <allegro++/math.h>
 #include <allegro++/mouse.h>
 #include <allegro++/color.h>
-#include <allegro++/primitives.h>
+#include <allegro++/allegro_class.h>
 #include <allegro++/gui.h>

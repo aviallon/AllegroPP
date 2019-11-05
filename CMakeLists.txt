@@ -16,13 +16,15 @@ include(GNUInstallDirs)
 
 set(InstallDir ${PROJECT_SOURCE_DIR})
 configure_file(
-   ${PROJECT_SOURCE_DIR}/src/allegro++/primitives.cpp.in
-   ${PROJECT_SOURCE_DIR}/src/allegro++/primitives.cpp)
+   ${PROJECT_SOURCE_DIR}/src/allegro++/init.in.cpp
+   ${PROJECT_SOURCE_DIR}/src/allegro++/init.cpp)
 
 file(GLOB SRC_FILES
     ${PROJECT_SOURCE_DIR}/src/allegro++/*.cpp
     ${PROJECT_SOURCE_DIR}/include/allegro++/*.h
     )
+    
+list(FILTER SRC_FILES EXCLUDE REGEX ".*\.in\.cpp$")
 set(UNSUPPORTED_OS true)
 
 IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")

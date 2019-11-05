@@ -15,16 +15,22 @@
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <VirtualDirectory Name="allegro++">
+      <File Name="include/allegro++/allegro_class.h"/>
+      <File Name="include/allegro++/utility.h"/>
       <File Name="include/allegro++/color.h"/>
       <File Name="include/allegro++/math.h"/>
       <File Name="include/allegro++/allegro.h"/>
-      <File Name="include/allegro++/primitives.h"/>
       <File Name="include/allegro++/mouse.h"/>
       <File Name="include/allegro++/gui.h"/>
     </VirtualDirectory>
   </VirtualDirectory>
   <VirtualDirectory Name="src">
     <VirtualDirectory Name="allegro++">
+      <File Name="src/allegro++/primitives.cpp"/>
+      <File Name="src/allegro++/init.in.cpp"/>
+      <File Name="src/allegro++/loops.cpp"/>
+      <File Name="src/allegro++/events.cpp"/>
+      <File Name="src/allegro++/utility.cpp"/>
       <File Name="src/allegro++/messages.cpp"/>
       <File Name="src/allegro++/image.cpp"/>
       <File Name="src/allegro++/cursor.cpp"/>
@@ -33,7 +39,6 @@
       <File Name="src/allegro++/sprites.cpp"/>
       <File Name="src/allegro++/color.cpp"/>
       <File Name="src/allegro++/math.cpp"/>
-      <File Name="src/allegro++/primitives.cpp.in"/>
       <File Name="src/allegro++/mouse.cpp"/>
       <File Name="src/allegro++/gui.cpp"/>
     </VirtualDirectory>
@@ -41,6 +46,7 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="resources">
+    <File Name=".gitignore"/>
     <File Name="doxygen.conf"/>
     <File Name="README.md"/>
     <File Name="CMakeLists.txt"/>

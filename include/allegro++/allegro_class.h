@@ -27,12 +27,12 @@ namespace AllegroPP {
 
    /* statics */
       static std::vector<Allegro*> instances;
-      static std::vector<std::shared_ptr<ALLEGRO_THREAD> > allegro_threads;
+      static std::stack<std::shared_ptr<ALLEGRO_THREAD> > allegro_threads;
       //static std::vector<std::thread> allegro_threads;
-      static std::vector<std::shared_ptr<ALLEGRO_THREAD> > event_threads;
+      static std::stack<std::shared_ptr<ALLEGRO_THREAD> > event_threads;
       //static std::vector<std::thread> event_threads;
       static unsigned loops; // Stop loop when it reaches 0
-      static unsigned currently_drawing_or_listening_for_events;
+      static int currently_drawing_or_listening_for_events;
       static ALLEGRO_FILE *arial_file;
       static ALLEGRO_FONT *default_font;
       static bool loop_started;
@@ -117,7 +117,7 @@ namespace AllegroPP {
 
    public:
 
-      Allegro();
+      Allegro(bool start_on_copy = false);
       Allegro(const Allegro& allegro);
       
       ~Allegro();

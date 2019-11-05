@@ -32,7 +32,7 @@
 *.app
 
 # Specific file
-src/allegro++/primitives.cpp
+src/allegro++/init.cpp
 
 # Codelite
 .codelite
