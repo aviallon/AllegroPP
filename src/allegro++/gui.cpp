@@ -29,7 +29,7 @@ namespace AllegroPP {
          images.push_back(Image(filename, x, y, width, height));
          return images.size()-1;
       } else {
-         throw new std::logic_error("Image does not exist !");
+         throw new allegro_error("Image does not exist !");
       }
    }
 

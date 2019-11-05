@@ -8,7 +8,7 @@ namespace AllegroPP {
    
    Sprite::Sprite(ALLEGRO_BITMAP* bmp){
       if(bmp == nullptr)
-         throw new std::invalid_argument("Your bitmap pointer is NULL !");
+         throw new allegro_invalid_argument("Your bitmap pointer is NULL !");
          
       sprite = shared_ptr<ALLEGRO_BITMAP>(bmp, al_destroy_bitmap);
       defined = true;

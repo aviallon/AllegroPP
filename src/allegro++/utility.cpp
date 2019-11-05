@@ -12,4 +12,12 @@ namespace AllegroPP{
       std::this_thread::sleep_for(std::chrono::microseconds(seconds*1e6));
    }
    #endif
+   
+   allegro_error::allegro_error(std::string msg) : std::runtime_error(msg.c_str()) {
+      std::cerr << "ERROR: " << msg << std::endl;
+   }
+   
+   allegro_invalid_argument::allegro_invalid_argument(std::string msg) : std::invalid_argument(msg.c_str()) {
+      std::cerr << "ERROR: " << msg << std::endl;
+   }
 }

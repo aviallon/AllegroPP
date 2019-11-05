@@ -20,13 +20,6 @@ namespace AllegroPP {
    
    Allegro::Allegro(bool start_on_copy)
    {
-//      display = nullptr;
-//      display_bitmap = nullptr;
-//      timer = nullptr;
-//      event_queue = nullptr;
-      //default_font = NULL;
-      //arial_file = NULL;
-//      ancien_emplacement = nullptr;
       mouse_clicked_func_ptr = &Allegro::_undefined_;
       mouse_moved_func_ptr = &Allegro::_undefined_;
       redraw_func_ptr = &Allegro::_undefined_;
@@ -116,27 +109,14 @@ namespace AllegroPP {
          al_rest(0.02);
          //flip_display_mutex.unlock();
       }
-//      delete mouse;
-//      delete (GUI*)gui_ptr;
-    //  if(loops == 0){
-   //		try{
-   //			al_fclose(arial_file);
-   //			
-   //		} catch(...){
-   //			std::cerr << "Erreur lors de la fermeture de arial_file;" << std::endl;
-   //			std::flush(std::cerr);
-   //		}
-         
-         //exit(0);
-    //  }
    }
    
    int Allegro::init()
    {
-       if (!al_init())
-       {
-           return -1;
-       }
+      if (!al_init())
+      {
+         throw new allegro_error("Allegro init failed !");
+      }
       
       al_install_keyboard();
       al_install_mouse();
@@ -144,48 +124,16 @@ namespace AllegroPP {
       al_init_primitives_addon();
       al_init_font_addon();
       al_init_ttf_addon();
-      
-   // Disabled memory font because it caused too much bugs.
-   #if (defined (LINUX) || defined (__linux__)) && 0
-      /* load font from memory */
-      #if defined (ALLEGRO_WRAPPER_DEV)
-         
-         extern uint8_t arial_data[]	asm("_binary_fonts_Arimo_Regular_ttf_start");
-         extern uint8_t arial_data_size[]	asm("_binary_fonts_Arimo_Regular_ttf_size");
-      
-      #else
-      
-         extern uint8_t arial_data[]	asm("_binary_allegro_fonts_Arimo_Regular_ttf_start");
-         extern uint8_t arial_data_size[]	asm("_binary_allegro_fonts_Arimo_Regular_ttf_size");
-      
-      #endif
-
-      size_t arial_size = (size_t)((void *)arial_data_size);
-
-      arial_file = al_open_memfile(arial_data, (int64_t)arial_size, "r");
-      default_font = al_load_ttf_font_f(arial_file, 0, 12, 0);
-
-      /* yep, the font file is embeded in the executable at link time :D */
-   #else
-      /*uint8_t* arial_data;
-      uint8_t* arial_data_size;
-      __asm mov _binary_allegro_arial_ttf_start, [ebx]arial_data
-      __asm mov _binary_allegro_arial_ttf_size, [ebx]arial_data_size*/
 
       default_font = al_load_ttf_font("@InstallDir@/fonts/Arimo-Regular.ttf", 12, 0);
-
-   #endif
-      
       
       if(!default_font){
-         std::cerr << "Warning ! Could not load default font !" << std::endl;
-         std::flush(std::cerr);
-         throw new std::logic_error("Could not load default font !");
-      } else {
-         //std::cout << "Succesfuly loaded arial.ttf" << std::endl;
+         throw new allegro_error("Could not load default font !");
       }
 
-       return 0;
+      fonts.push_back(default_font);
+
+      return 0;
    }
    
 }

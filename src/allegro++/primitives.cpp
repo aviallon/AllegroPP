@@ -13,6 +13,7 @@ namespace AllegroPP {
    //std::vector<std::thread> Allegro::allegro_threads;
    std::stack<std::shared_ptr<ALLEGRO_THREAD> > Allegro::allegro_threads;
    std::stack<std::shared_ptr<ALLEGRO_THREAD> > Allegro::event_threads;
+   std::vector<ALLEGRO_FONT*> Allegro::fonts;
    //std::vector<std::thread> Allegro::event_threads;
    //std::timed_mutex Allegro::flip_display_mutex;
    std::timed_mutex Allegro::draw_text_mutex;
@@ -52,7 +53,7 @@ namespace AllegroPP {
 
    void* Allegro::getContext(){
       if(context == nullptr)
-         throw new std::runtime_error("Context is not set !");
+         throw new allegro_error("Context is not set !");
       return context;
    }
 
@@ -104,7 +105,7 @@ namespace AllegroPP {
       bool looping = false;
       unsigned counter = 0;
       while(event_loop_working && counter < 100){
-         std::this_thread::sleep_for(std::chrono::microseconds(500));
+         rest(0.001);
          counter++;
          //std::cout << "Waiting to quit..." << std::endl;
       }
@@ -211,7 +212,7 @@ namespace AllegroPP {
 
    void Allegro::draw_image(int x, int y, ALLEGRO_BITMAP* image){
       if(image == nullptr)
-         throw new std::invalid_argument("Provided bitmap is nullptr !");
+         throw new allegro_invalid_argument("Provided bitmap is nullptr !");
       al_draw_bitmap(image, x, y, 0);
    }
    
@@ -221,7 +222,7 @@ namespace AllegroPP {
 
    void Allegro::draw_scaled_image(int x, int y, int w, int h, ALLEGRO_BITMAP* image){
       if(image == nullptr)
-         throw new std::invalid_argument("Provided bitmap is nullptr !");
+         throw new allegro_invalid_argument("Provided bitmap is nullptr !");
          
       al_draw_scaled_bitmap(image, 0, 0, al_get_bitmap_width(image), al_get_bitmap_height(image), x, y, w, h, 0);
    }
@@ -358,13 +359,13 @@ namespace AllegroPP {
       if(gui_ptr)
          return gui_ptr.get();
       else
-         throw new std::runtime_error("GUI is not initialized !");
+         throw new allegro_error("GUI is not initialized !");
    }
 
    int Allegro::createWindow(float FPS, int width, int height, int flags)
    {
       if(display || window_created)
-         throw new std::runtime_error("Window already created");
+         throw new allegro_error("Window already created");
 
       while(!flip_display_mutex.try_lock_for(std::chrono::milliseconds(10))){
          al_rest(0.01);
@@ -374,7 +375,7 @@ namespace AllegroPP {
       if (!display)
       {
          al_destroy_display(display.get());
-         throw new std::runtime_error("Display failed to init");
+         throw new allegro_error("Display failed to init");
          return -1;
       }
 
@@ -385,7 +386,7 @@ namespace AllegroPP {
       {
          al_destroy_timer(timer.get());
          al_destroy_display(display.get());
-         throw new std::runtime_error("Timer failed to init");
+         throw new allegro_error("Timer failed to init");
          return -1;
       }
 
@@ -395,7 +396,7 @@ namespace AllegroPP {
          al_destroy_event_queue(event_queue.get());
          al_destroy_timer(timer.get());
          al_destroy_display(display.get());
-         throw new std::runtime_error("Event queue failed to init");
+         throw new allegro_error("Event queue failed to init");
          return -1;
       }
       

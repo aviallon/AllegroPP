@@ -35,6 +35,7 @@ namespace AllegroPP {
       static int currently_drawing_or_listening_for_events;
       static ALLEGRO_FILE *arial_file;
       static ALLEGRO_FONT *default_font;
+      static std::vector<ALLEGRO_FONT*> fonts;
       static bool loop_started;
       static std::timed_mutex draw_text_mutex;
 
@@ -112,8 +113,6 @@ namespace AllegroPP {
       
       double effective_frametime;
       timestamp last_frame;
-      
-      std::vector<ALLEGRO_FONT*> fonts;
 
    public:
 
