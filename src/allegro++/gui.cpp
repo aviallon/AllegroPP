@@ -167,6 +167,10 @@ namespace AllegroPP {
 //      this->t0 = currentTime;
       this->color = color.toAllegro();
    }
+   
+   Message::~Message(){
+      
+   }
 
    InputBox::InputBox(Allegro* allegro, std::string text, int x, int y, int height, int width, void (*input_validated)(Allegro*, InputBox*)){
       this->text = text;

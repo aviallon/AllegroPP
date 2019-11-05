@@ -131,6 +131,7 @@ namespace AllegroPP {
    public:
       
       Message(std::string message, float duration, float currentTime, Color color);
+      ~Message();
       
       std::string message;
       float duration;
